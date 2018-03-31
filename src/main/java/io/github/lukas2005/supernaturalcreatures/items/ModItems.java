@@ -19,7 +19,7 @@ public class ModItems {
 	private static ArrayList<Item> items = new ArrayList<>();
 
 	public static void initItems() {
-
+		initHelper(new VampireTestItem(), "vamp_test");
 	}
 
 	@SubscribeEvent
