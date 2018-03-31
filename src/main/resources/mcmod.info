@@ -1,0 +1,16 @@
+[
+{
+  "modid": "${modid}",
+  "name": "Supernatural Creatures Mod",
+  "description": "Mod that adds diffrent supernatural creatures like werewolfes, vampiers and others! You can also become one of them or a hunter!",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["lukas2005"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
