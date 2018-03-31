@@ -1,5 +1,6 @@
 package io.github.lukas2005.supernaturalcreatures.items;
 
+import io.github.lukas2005.supernaturalcreatures.Main;
 import io.github.lukas2005.supernaturalcreatures.capabilities.IPlayerDataCapability;
 import io.github.lukas2005.supernaturalcreatures.capabilities.ModCapabilities;
 import io.github.lukas2005.supernaturalcreatures.enums.CreatureType;

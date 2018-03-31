@@ -50,12 +50,11 @@ public interface IPlayerDataCapability {
 
 		@Override
 		public void setCreatureType(CreatureType type) {
+			creatureType = type;
 
 			if (!player.getEntityWorld().isRemote) {
 				NetworkManager.INSTANCE.sendTo(new PlayerDataMessage(this), (EntityPlayerMP) player);
 			}
-
-			creatureType = type;
 		}
 
 		@Override

@@ -1,5 +1,6 @@
 package io.github.lukas2005.supernaturalcreatures.network;
 
+import io.github.lukas2005.supernaturalcreatures.Main;
 import io.github.lukas2005.supernaturalcreatures.Utils;
 import io.github.lukas2005.supernaturalcreatures.capabilities.IPlayerDataCapability;
 import io.github.lukas2005.supernaturalcreatures.capabilities.ModCapabilities;
@@ -7,6 +8,7 @@ import io.github.lukas2005.supernaturalcreatures.enums.CreatureType;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
