@@ -17,13 +17,17 @@ public class EventHandler {
 	public static void onEntityJoinWorld(EntityJoinWorldEvent e) {
 		if (e.getEntity() instanceof EntityPlayer) {
 			EntityPlayer player = (EntityPlayer) e.getEntity();
+			if (!e.getWorld().isRemote) {
+				IPlayerDataCapability playerData = player.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
+				playerData.syncData(player);
+			}
 		}
 	}
 
 	@SubscribeEvent
 	public static void onPlayerTick(TickEvent.PlayerTickEvent e) {
 		if (e.phase == TickEvent.Phase.END) {
-			IPlayerDataCapability playerData = e.player.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, EnumFacing.DOWN);
+			IPlayerDataCapability playerData = e.player.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
 			if (playerData != null) Main.logger.info("Side: " + e.side + " State: " + playerData.getCreatureType());
 		}
 	}

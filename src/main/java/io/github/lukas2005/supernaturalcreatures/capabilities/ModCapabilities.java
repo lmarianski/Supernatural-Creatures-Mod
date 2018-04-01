@@ -23,7 +23,7 @@ public class ModCapabilities {
 	@SubscribeEvent
 	public static void onAttach(AttachCapabilitiesEvent<Entity> e) {
 		if (e.getObject() instanceof EntityPlayer) {
-			e.addCapability(new ResourceLocation(Reference.MOD_ID, "PLAYER_DATA"), new IPlayerDataCapability.Provider((EntityPlayer) e.getObject()));
+			e.addCapability(new ResourceLocation(Reference.MOD_ID, "PLAYER_DATA"), new IPlayerDataCapability.Provider());
 		}
 	}
 }

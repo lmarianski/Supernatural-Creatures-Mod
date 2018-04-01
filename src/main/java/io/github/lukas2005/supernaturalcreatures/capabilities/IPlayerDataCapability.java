@@ -21,6 +21,8 @@ public interface IPlayerDataCapability {
 	void setCreatureType(CreatureType type);
 	CreatureType getCreatureType();
 
+	void syncData(EntityPlayer player);
+
 	class Storage implements Capability.IStorage<IPlayerDataCapability> {
 
 		@Override
@@ -40,26 +42,23 @@ public interface IPlayerDataCapability {
 
 	class Impl implements IPlayerDataCapability {
 
-		EntityPlayer player;
-
 		CreatureType creatureType = CreatureType.HUMAN;
-
-		public Impl(EntityPlayer p) {
-			player = p;
-		}
 
 		@Override
 		public void setCreatureType(CreatureType type) {
 			creatureType = type;
-
-			if (!player.getEntityWorld().isRemote) {
-				NetworkManager.INSTANCE.sendTo(new PlayerDataMessage(this), (EntityPlayerMP) player);
-			}
 		}
 
 		@Override
 		public CreatureType getCreatureType() {
 			return creatureType;
+		}
+
+		@Override
+		public void syncData(EntityPlayer player) {
+			if (!player.getEntityWorld().isRemote) {
+				NetworkManager.INSTANCE.sendTo(new PlayerDataMessage(this), (EntityPlayerMP) player);
+			}
 		}
 	}
 
@@ -67,8 +66,8 @@ public interface IPlayerDataCapability {
 
 		Impl impl;
 
-		public Provider(EntityPlayer p) {
-			impl = new Impl(p);
+		public Provider() {
+			impl = new Impl();
 		}
 
 		@Override

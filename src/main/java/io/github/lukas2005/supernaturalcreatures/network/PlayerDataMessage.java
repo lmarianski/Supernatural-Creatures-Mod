@@ -38,9 +38,9 @@ public class PlayerDataMessage implements IMessage {
 		@Override
 		public IMessage onMessage(PlayerDataMessage message, MessageContext ctx) {
 
-			EntityPlayer player = Utils.getPlayerInstance(ctx);
-
 			Minecraft.getMinecraft().addScheduledTask(() -> {
+				EntityPlayer player = Utils.getPlayerInstance(ctx);
+
 				IPlayerDataCapability playerData = player.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
 
 				playerData.setCreatureType(message.type);
