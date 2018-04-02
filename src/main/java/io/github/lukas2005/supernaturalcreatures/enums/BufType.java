@@ -1,0 +1,13 @@
+package io.github.lukas2005.supernaturalcreatures.enums;
+
+public enum BufType {
+	HEALTH_BOOST,
+	SPEED_BOOST,
+	STRENGTH_BOOST,
+	DIG_SPEED_BOOST,
+	KNOCKBACK,
+	KNOCKBACK_RESISTANCE,
+	JUMP_BOOST,
+	RESISTANCE,
+	FALL_DISTANCE;
+}

@@ -1,9 +1,11 @@
 package io.github.lukas2005.supernaturalcreatures;
 
+import io.github.lukas2005.supernaturalcreatures.behaviour.VampireBehaviour;
 import io.github.lukas2005.supernaturalcreatures.capabilities.ModCapabilities;
 import io.github.lukas2005.supernaturalcreatures.network.NetworkManager;
 import io.github.lukas2005.supernaturalcreatures.proxy.IProxy;
 import net.minecraft.launchwrapper.Launch;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -33,6 +35,13 @@ public class Main {
 
 		ModCapabilities.register();
 		NetworkManager.init();
+		for (int i = 0; i < VampireBehaviour.EYE_OVERLAY_COUNT; i++) {
+			VampireBehaviour.eyeOverlays.add(new ResourceLocation(Reference.MOD_ID + ":textures/entity/player/overlay/vampire/eyes/eyes" + i + ".png"));
+		}
+
+		for (int i = 0; i < VampireBehaviour.FANG_OVERLAY_COUNT; i++) {
+			VampireBehaviour.fangOverlays.add(new ResourceLocation(Reference.MOD_ID + ":textures/entity/player/overlay/vampire/fangs/fangs" + i + ".png"));
+		}
 	}
 
 	@Mod.EventHandler

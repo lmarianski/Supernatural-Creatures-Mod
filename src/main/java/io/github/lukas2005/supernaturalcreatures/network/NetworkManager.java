@@ -9,10 +9,10 @@ public class NetworkManager {
 
 	public static final SimpleNetworkWrapper INSTANCE = NetworkRegistry.INSTANCE.newSimpleChannel(Reference.MOD_ID);
 
-	static int id = -1;
+	private static int id = -1;
 
 	public static void init() {
-		INSTANCE.registerMessage(PlayerDataMessage.Handler.class, PlayerDataMessage.class, id++, Side.CLIENT);
+		INSTANCE.registerMessage(CapabilitySyncMessage.Handler.class, CapabilitySyncMessage.class, id++, Side.CLIENT);
 	}
 
 }
