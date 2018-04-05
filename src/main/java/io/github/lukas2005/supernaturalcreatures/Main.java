@@ -2,6 +2,7 @@ package io.github.lukas2005.supernaturalcreatures;
 
 import io.github.lukas2005.supernaturalcreatures.behaviour.VampireBehaviour;
 import io.github.lukas2005.supernaturalcreatures.capabilities.ModCapabilities;
+import io.github.lukas2005.supernaturalcreatures.entity.ModEntities;
 import io.github.lukas2005.supernaturalcreatures.network.NetworkManager;
 import io.github.lukas2005.supernaturalcreatures.proxy.IProxy;
 import net.minecraft.launchwrapper.Launch;
@@ -42,6 +43,8 @@ public class Main {
 		for (int i = 0; i < VampireBehaviour.FANG_OVERLAY_COUNT; i++) {
 			VampireBehaviour.fangOverlays.add(new ResourceLocation(Reference.MOD_ID + ":textures/entity/player/overlay/vampire/fangs/fangs" + i + ".png"));
 		}
+
+		ModEntities.registerEntities();
 	}
 
 	@Mod.EventHandler
