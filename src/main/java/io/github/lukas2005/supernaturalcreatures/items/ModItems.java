@@ -3,7 +3,6 @@ package io.github.lukas2005.supernaturalcreatures.items;
 import io.github.lukas2005.supernaturalcreatures.IHasModel;
 import io.github.lukas2005.supernaturalcreatures.Main;
 import io.github.lukas2005.supernaturalcreatures.Reference;
-import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -38,7 +37,6 @@ public class ModItems {
 			}
 		}
 	}
-
 
 	public static Item initHelper(Item item, String name) {
 		items.add(item

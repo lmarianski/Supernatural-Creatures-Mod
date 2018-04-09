@@ -4,6 +4,7 @@ import io.github.lukas2005.supernaturalcreatures.capabilities.IPlayerDataCapabil
 import io.github.lukas2005.supernaturalcreatures.enums.BufType;
 import io.github.lukas2005.supernaturalcreatures.enums.CreatureType;
 import io.github.lukas2005.supernaturalcreatures.enums.ResistanceLevel;
+import io.github.lukas2005.supernaturalcreatures.skill.SkillTree;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.renderer.entity.RenderPlayer;
@@ -13,6 +14,14 @@ import net.minecraft.util.EntityDamageSource;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 public class DefaultCreatureBehaviour implements CreatureBehaviour {
+
+	SkillTree tree;
+
+	public DefaultCreatureBehaviour() {
+		this.tree = new SkillTree();
+		initSkillTree(tree);
+	}
+
 	@Override
 	public boolean shouldApplyBuf(BufType buf, EntityPlayer player, IPlayerDataCapability playerData, CreatureType type) {
 		switch (buf) {
@@ -57,6 +66,20 @@ public class DefaultCreatureBehaviour implements CreatureBehaviour {
 
 	@Override
 	public void playerRenderOverride(IPlayerDataCapability playerData, EntityPlayer player, RenderLivingBase<?> renderer) {
+	}
+
+	@Override
+	public float getMultiplierForBuf(BufType buf, EntityPlayer player, IPlayerDataCapability playerData, int level) {
+		return 0;
+	}
+
+	@Override
+	public SkillTree getSkillTree() {
+		return tree;
+	}
+
+	@Override
+	public void initSkillTree(SkillTree tree) {
 	}
 
 }

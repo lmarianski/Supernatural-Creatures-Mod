@@ -4,6 +4,7 @@ import io.github.lukas2005.supernaturalcreatures.capabilities.IPlayerDataCapabil
 import io.github.lukas2005.supernaturalcreatures.capabilities.ModCapabilities;
 import io.github.lukas2005.supernaturalcreatures.enums.BufType;
 import io.github.lukas2005.supernaturalcreatures.enums.CreatureType;
+import io.github.lukas2005.supernaturalcreatures.skill.Skill;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.MobEffects;
@@ -53,7 +54,11 @@ public class EventHandler {
 			}
 
 			if (type.getBehaviour().shouldApplyBuf(BufType.SPEED_BOOST, e.player, playerData, type))
-				e.player.setAIMoveSpeed(e.player.getAIMoveSpeed() + type.baseSpeed);
+				e.player.setAIMoveSpeed(e.player.getAIMoveSpeed() + type.baseSpeed * type.getBehaviour().getMultiplierForBuf(BufType.SPEED_BOOST, e.player, playerData, playerData.getLevel()));
+
+			for (Skill skill : playerData.getSkills()) {
+				skill.onPlayerTick(e);
+			}
 		}
 	}
 
@@ -65,34 +70,41 @@ public class EventHandler {
 			CreatureType type = playerData.getCreatureType();
 
 			if (type.getBehaviour().shouldApplyBuf(BufType.DIG_SPEED_BOOST, e.getEntityPlayer(), playerData, type))
-				e.setNewSpeed(e.getOriginalSpeed() + playerData.getCreatureType().baseDigSpeed);
+				e.setNewSpeed(e.getOriginalSpeed() + playerData.getCreatureType().baseDigSpeed * type.getBehaviour().getMultiplierForBuf(BufType.DIG_SPEED_BOOST, e.getEntityPlayer(), playerData, playerData.getLevel()));
 		}
 	}
 
 	@SubscribeEvent
 	public static void onHurt(LivingHurtEvent e) {
+		IPlayerDataCapability attackerData = null;
+		IPlayerDataCapability victimData = null;
+		
 		if (e.getSource().getSourceOfDamage() instanceof EntityPlayer) {
 			EntityPlayer player = (EntityPlayer) e.getSource().getSourceOfDamage();
 
-			IPlayerDataCapability playerData = player.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
-			CreatureType type = playerData.getCreatureType();
+			attackerData = player.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
+			CreatureType type = attackerData.getCreatureType();
 
-			if (type.getBehaviour().shouldApplyBuf(BufType.STRENGTH_BOOST, player, playerData, type))
-				e.setAmount(e.getAmount() + type.baseStrength);
+			if (type.getBehaviour().shouldApplyBuf(BufType.STRENGTH_BOOST, player, attackerData, type))
+				e.setAmount(e.getAmount() + type.baseStrength * type.getBehaviour().getMultiplierForBuf(BufType.STRENGTH_BOOST, player, attackerData, attackerData.getLevel()));
+			
+			for (Skill skill : attackerData.getSkills()) {
+				skill.onPlayerAttack(e, player, attackerData, e.getEntityLiving());
+			}
 		}
 		if (e.getEntityLiving() instanceof EntityPlayer) {
 			EntityPlayer player = (EntityPlayer) e.getEntityLiving();
 
-			IPlayerDataCapability playerData = player.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
+			victimData = player.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
 
-			CreatureType type = playerData.getCreatureType();
+			CreatureType type = victimData.getCreatureType();
 
-			if (type.getBehaviour().shouldApplyBuf(BufType.RESISTANCE, player, playerData, type)) {
+			if (type.getBehaviour().shouldApplyBuf(BufType.RESISTANCE, player, victimData, type)) {
 				switch (type.getBehaviour().getResistanceLevel(e.getSource())) {
 					case NONE:
 						break;
 					case RESISTANT:
-						e.setAmount(e.getAmount() - type.baseResistance);
+						e.setAmount(e.getAmount() - type.baseResistance * type.getBehaviour().getMultiplierForBuf(BufType.RESISTANCE, player, victimData, victimData.getLevel()));
 						break;
 					case INVULNERABLE:
 						e.setCanceled(true);
@@ -104,17 +116,32 @@ public class EventHandler {
 					e.setAmount(Integer.MAX_VALUE);
 					break;
 				case WEAKNESS:
-					type.getBehaviour().applyWeakness(e, playerData, type, player);
+					type.getBehaviour().applyWeakness(e, victimData, type, player);
 					break;
 			}
 
 			if (e.getSource() == DamageSource.fall) {
-				if (type.getBehaviour().shouldApplyBuf(BufType.FALL_DISTANCE, player, playerData, type))
-					type.baseFallDistance = 1.5f;
-				e.setAmount(e.getAmount() - type.baseFallDistance * 2);
+				if (type.getBehaviour().shouldApplyBuf(BufType.FALL_DISTANCE, player, victimData, type))
+					e.setAmount(e.getAmount() - type.baseFallDistance *  type.getBehaviour().getMultiplierForBuf(BufType.FALL_DISTANCE, player, victimData, victimData.getLevel()) * 2);
+			}
+
+			for (Skill skill : victimData.getSkills()) {
+				skill.onPlayerHurt(e, (EntityLivingBase) e.getSource().getSourceOfDamage(), player, victimData);
 			}
 		}
+		if (e.getSource().getSourceOfDamage() instanceof EntityPlayer && e.getEntityLiving() instanceof EntityPlayer) {
+			EntityPlayer attacker = (EntityPlayer) e.getSource().getSourceOfDamage();
+			EntityPlayer victim = (EntityPlayer) e.getEntityLiving();
 
+			for (Skill skill : attackerData.getSkills()) {
+				skill.onPlayerHurt(e, (EntityLivingBase) e.getSource().getSourceOfDamage(), attacker, attackerData);
+			}
+
+
+			for (Skill skill : victimData.getSkills()) {
+				skill.onPlayerHurt(e, (EntityLivingBase) e.getSource().getSourceOfDamage(), victim, victimData);
+			}
+		}
 	}
 
 	@SubscribeEvent
@@ -127,7 +154,7 @@ public class EventHandler {
 			CreatureType type = playerData.getCreatureType();
 
 			if (type.getBehaviour().shouldApplyBuf(BufType.JUMP_BOOST, player, playerData, type))
-				if (type.baseJumpHeight > 0) player.addVelocity(0, (type.baseJumpHeight + 0.5f) * 0.1F, 0);
+				if (type.baseJumpHeight > 0) player.addVelocity(0, (type.baseJumpHeight * type.getBehaviour().getMultiplierForBuf(BufType.JUMP_BOOST, player, playerData, playerData.getLevel()) + 0.5f) * 0.1F, 0);
 			//player.jump(); // Never ever uncomment this
 		}
 	}

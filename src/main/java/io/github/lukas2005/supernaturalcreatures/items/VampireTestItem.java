@@ -4,6 +4,7 @@ import io.github.lukas2005.supernaturalcreatures.Main;
 import io.github.lukas2005.supernaturalcreatures.capabilities.IPlayerDataCapability;
 import io.github.lukas2005.supernaturalcreatures.capabilities.ModCapabilities;
 import io.github.lukas2005.supernaturalcreatures.enums.CreatureType;
+import io.github.lukas2005.supernaturalcreatures.gui.ModGui;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -31,6 +32,8 @@ public class VampireTestItem extends Item {
 			}
 		} else {
 			IPlayerDataCapability playerData = playerIn.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
+
+			playerIn.openGui(Main.INSTANCE, ModGui.SKILL_TREE.ordinal(), worldIn, (int) playerIn.posX, (int) playerIn.posY, (int) playerIn.posZ);
 
 			Main.logger.info(playerData.getCreatureType());
 		}

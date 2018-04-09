@@ -4,6 +4,7 @@ import io.github.lukas2005.supernaturalcreatures.behaviour.CreatureBehaviour;
 import io.github.lukas2005.supernaturalcreatures.behaviour.HumanBehaviour;
 import io.github.lukas2005.supernaturalcreatures.behaviour.VampireBehaviour;
 import io.github.lukas2005.supernaturalcreatures.behaviour.WerewolfBehaviour;
+import io.github.lukas2005.supernaturalcreatures.skill.SkillTree;
 
 public enum CreatureType {
 

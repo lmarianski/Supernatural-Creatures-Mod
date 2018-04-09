@@ -1,18 +1,18 @@
 package io.github.lukas2005.supernaturalcreatures.blocks;
 
-import io.github.lukas2005.supernaturalcreatures.IHasModel;
-import io.github.lukas2005.supernaturalcreatures.Main;
-import io.github.lukas2005.supernaturalcreatures.Reference;
-import net.minecraft.block.Block;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.event.ModelRegistryEvent;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+		import io.github.lukas2005.supernaturalcreatures.IHasModel;
+		import io.github.lukas2005.supernaturalcreatures.Main;
+		import io.github.lukas2005.supernaturalcreatures.Reference;
+		import net.minecraft.block.Block;
+		import net.minecraft.item.Item;
+		import net.minecraft.item.ItemBlock;
+		import net.minecraft.util.ResourceLocation;
+		import net.minecraftforge.client.event.ModelRegistryEvent;
+		import net.minecraftforge.event.RegistryEvent;
+		import net.minecraftforge.fml.common.Mod;
+		import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-import java.util.ArrayList;
+		import java.util.ArrayList;
 
 @Mod.EventBusSubscriber
 public class ModBlocks {

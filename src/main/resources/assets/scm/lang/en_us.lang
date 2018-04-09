@@ -1,0 +1,7 @@
+# Death messages
+death.attack.scm.vampire_bite.player=%s got his blood sucked out by %s
+death.attack.scm.vampire_bite=%s got his blood sucked out
+
+# Gui
+gui.scm.skillTree.downloadingData=Downloading skill data...
+gui.scm.skillTree.title=Skills

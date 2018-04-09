@@ -2,6 +2,7 @@ package io.github.lukas2005.supernaturalcreatures.behaviour;
 
 import io.github.lukas2005.supernaturalcreatures.capabilities.IPlayerDataCapability;
 import io.github.lukas2005.supernaturalcreatures.render.RenderUtil;
+import io.github.lukas2005.supernaturalcreatures.skill.SkillTree;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderLivingBase;

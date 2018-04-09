@@ -1,9 +1,15 @@
 package io.github.lukas2005.supernaturalcreatures.behaviour;
 
-import io.github.lukas2005.supernaturalcreatures.behaviour.DefaultCreatureBehaviour;
+import io.github.lukas2005.supernaturalcreatures.Reference;
 import io.github.lukas2005.supernaturalcreatures.capabilities.IPlayerDataCapability;
 import io.github.lukas2005.supernaturalcreatures.enums.CreatureType;
 import io.github.lukas2005.supernaturalcreatures.enums.ResistanceLevel;
+import io.github.lukas2005.supernaturalcreatures.skill.Level;
+import io.github.lukas2005.supernaturalcreatures.skill.Skill;
+import io.github.lukas2005.supernaturalcreatures.skill.SkillHelper;
+import io.github.lukas2005.supernaturalcreatures.skill.SkillTree;
+import io.github.lukas2005.supernaturalcreatures.skill.vampire.SkillHardTeeth;
+import io.github.lukas2005.supernaturalcreatures.skill.vampire.SkillSunScreen;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderPlayer;
@@ -21,6 +27,10 @@ public class VampireBehaviour extends DefaultCreatureBehaviour {
 
 	public static final int EYE_OVERLAY_COUNT = 1;
 	public static final int FANG_OVERLAY_COUNT = 1;
+
+	public VampireBehaviour() {
+		super();
+	}
 
 	@Override
 	public ResistanceLevel getResistanceLevel(DamageSource source) {
@@ -53,8 +63,6 @@ public class VampireBehaviour extends DefaultCreatureBehaviour {
 			GlStateManager.translate(0.0F, 0.2F, 0.0F);
 		}
 
-
-
 		if (fangs != null) {
 			playerRenderer.bindTexture(fangs);
 			playerRenderer.getMainModel().bipedHead.render(scale);
@@ -68,5 +76,26 @@ public class VampireBehaviour extends DefaultCreatureBehaviour {
 	private void renderNormalEyes(RenderPlayer playerRenderer, ResourceLocation eyeType, float scale) {
 		playerRenderer.bindTexture(eyeType);
 		playerRenderer.getMainModel().bipedHead.render(scale);
+	}
+
+	@Override
+	public void initSkillTree(SkillTree tree) {
+		Level lvl1 = tree.addLevel();
+
+		Level lvl2 = tree.addLevel();
+
+		try {
+			SkillHelper.createSkillChain(SkillSunScreen.class, true, tree, (objects, skill) -> {
+				objects[0]=(int)objects[0]+1;
+				skill.setIcon(new ResourceLocation(Reference.MOD_ID, "textures/skills/vampire/test1.jpg"), 0, 0, 916, 873);
+			}, 1);
+			SkillHelper.createSkillChain(SkillHardTeeth.class, true, tree, (objects, skill) -> {
+				objects[0]=(int)objects[0]+1;
+				skill.setIcon(new ResourceLocation(Reference.MOD_ID, "textures/skills/vampire/test2.png"), 0, 0, 35, 35);
+			}, 1);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 }

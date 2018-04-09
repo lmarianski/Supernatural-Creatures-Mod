@@ -1,19 +1,25 @@
 package io.github.lukas2005.supernaturalcreatures.capabilities;
 
+import io.github.lukas2005.supernaturalcreatures.NBTTagListIterator;
 import io.github.lukas2005.supernaturalcreatures.enums.CreatureType;
 import io.github.lukas2005.supernaturalcreatures.network.NetworkManager;
 import io.github.lukas2005.supernaturalcreatures.network.CapabilitySyncMessage;
+import io.github.lukas2005.supernaturalcreatures.skill.Skill;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +33,11 @@ public interface IPlayerDataCapability {
 	void setTransformed(boolean transformed);
 	boolean isTransformed();
 
+	void setLevel(int newLevel);
+	void incrementLevel();
+	void decrementLevel();
+	int getLevel();
+
 	void setData(String key, String value);
 	String getData(String key);
 
@@ -35,6 +46,11 @@ public interface IPlayerDataCapability {
 	void cloneTo(IPlayerDataCapability target);
 
 	void syncData(EntityPlayer player);
+
+	ArrayList<Skill> getSkills();
+	void setSkills(ArrayList<Skill> skills);
+	void addSkill(Skill skills);
+	void removeSkill(Skill skills);
 
 	class Storage implements Capability.IStorage<IPlayerDataCapability> {
 
@@ -53,6 +69,16 @@ public interface IPlayerDataCapability {
 
 			nbt.setTag("dataMap", dataMap);
 
+			nbt.setInteger("level", instance.getLevel());
+
+			NBTTagList skillList = new NBTTagList();
+
+			for (Skill e : instance.getSkills()) {
+				skillList.appendTag(new NBTTagString(e.toString()));
+			}
+
+			nbt.setTag("skillList", skillList);
+
 			return nbt;
 		}
 
@@ -63,12 +89,18 @@ public interface IPlayerDataCapability {
 			instance.setCreatureType(CreatureType.byOrdinal(nbt.getInteger("creatureType")));
 			instance.setTransformed(nbt.getBoolean("transformed"));
 
-			NBTTagCompound dataMap = (NBTTagCompound)nbt.getTag("dataMap");
+			NBTTagCompound dataMap = nbt.getCompoundTag("dataMap");
 
-			if (dataMap != null) {
-				for (String key : dataMap.getKeySet()) {
-					instance.setData(key, dataMap.getString(key));
-				}
+			for (String key : dataMap.getKeySet()) {
+				instance.setData(key, dataMap.getString(key));
+			}
+
+			instance.setLevel(nbt.getInteger("level"));
+
+			NBTTagList skillList = nbt.getTagList("skillList", 8);
+
+			for (NBTBase base : new NBTTagListIterator(skillList)) {
+				instance.addSkill(Skill.skills.get(new ResourceLocation(base.toString())));
 			}
 		}
 	}
@@ -79,6 +111,10 @@ public interface IPlayerDataCapability {
 		boolean transformed = false;
 
 		Map<String, String> data = new HashMap<>();
+
+		int level = 0;
+
+		ArrayList<Skill> skills = new ArrayList<>();
 
 		@Override
 		public void setCreatureType(CreatureType type) {
@@ -98,6 +134,26 @@ public interface IPlayerDataCapability {
 		@Override
 		public boolean isTransformed() {
 			return transformed;
+		}
+
+		@Override
+		public void setLevel(int newLevel) {
+			level = newLevel;
+		}
+
+		@Override
+		public void incrementLevel() {
+			level++;
+		}
+
+		@Override
+		public void decrementLevel() {
+			level--;
+		}
+
+		@Override
+		public int getLevel() {
+			return level;
 		}
 
 		@Override
@@ -131,6 +187,28 @@ public interface IPlayerDataCapability {
 			if (!player.getEntityWorld().isRemote) {
 				NetworkManager.INSTANCE.sendTo(new CapabilitySyncMessage<>(this, ModCapabilities.PLAYER_DATA_CAPABILITY), (EntityPlayerMP) player);
 			}
+		}
+
+		@Override
+		public ArrayList<Skill> getSkills() {
+			return skills;
+		}
+
+		@Override
+		public void setSkills(ArrayList<Skill> skills) {
+			this.skills = skills;
+		}
+
+		@Override
+		public void addSkill(Skill skill) {
+			if (!skills.contains(skill)) {
+				skills.add(skill);
+			}
+		}
+
+		@Override
+		public void removeSkill(Skill skill) {
+			skills.remove(skill);
 		}
 	}
 
