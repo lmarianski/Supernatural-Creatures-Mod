@@ -307,6 +307,9 @@ public class GuiSkillTree extends GuiScreen implements IProgressMeter {
 		GlStateManager.depthFunc(515);
 
 		int y = 0;
+
+		Skill toolTipSkill = null;
+
 		for (Level level : playerData.getCreatureType().getBehaviour().getSkillTree().getLevels()) {
 			int x = 0;
 			for (Skill skill : level.skills) {
@@ -337,15 +340,9 @@ public class GuiSkillTree extends GuiScreen implements IProgressMeter {
 				this.drawTexturedModalRect(x1, y1,2,204, 22, 22);
 				//skill.drawIcon(x1, y1, 22, 22);
 
-				if (mouseX-k >= x1 && mouseX-k <= x1 + 22 && mouseY-l >= y1 && mouseY-l <= y1 + 22) {
-					StringBuilder builder = new StringBuilder();
-
-					builder.append(skill.toString());
-
-					renderToolTip(builder, mouseX-k, mouseY-l);
+				if (mouseX-100 >= x1 && mouseX-100 <= x1 + 22 && mouseY-35 >= y1 && mouseY-35 <= y1 + 22) {
+					toolTipSkill = skill;
 				}
-
-				//drawTexturedModalRect();
 
 				x+=27;
 			}
@@ -367,6 +364,14 @@ public class GuiSkillTree extends GuiScreen implements IProgressMeter {
 		GlStateManager.enableDepth();
 		GlStateManager.enableLighting();
 		RenderHelper.disableStandardItemLighting();
+
+		if (toolTipSkill != null) {
+			StringBuilder builder = new StringBuilder();
+
+			builder.append(toolTipSkill.toString());
+
+			renderToolTip(builder, mouseX, mouseY);
+		}
 	}
 
 	private TextureAtlasSprite getTexture(Block blockIn) {
