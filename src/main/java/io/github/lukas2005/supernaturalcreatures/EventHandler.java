@@ -57,7 +57,9 @@ public class EventHandler {
 				e.player.setAIMoveSpeed(e.player.getAIMoveSpeed() + type.baseSpeed * type.getBehaviour().getMultiplierForBuf(BufType.SPEED_BOOST, e.player, playerData, playerData.getLevel()));
 
 			for (Skill skill : playerData.getSkills()) {
-				skill.onPlayerTick(e);
+				if (skill != null) {
+					skill.onPlayerTick(e);
+				}
 			}
 		}
 	}

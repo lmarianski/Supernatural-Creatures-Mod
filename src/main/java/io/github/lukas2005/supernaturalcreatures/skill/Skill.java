@@ -4,6 +4,7 @@ import io.github.lukas2005.supernaturalcreatures.Reference;
 import io.github.lukas2005.supernaturalcreatures.capabilities.IPlayerDataCapability;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
@@ -16,7 +17,7 @@ import java.util.*;
 
 public class Skill {
 
-	public static Map<ResourceLocation, Skill> skills = new HashMap<>();
+	public static Map<String, Skill> skills = new HashMap<>();
 
 	ResourceLocation icon;
 	int iconU;
@@ -36,13 +37,9 @@ public class Skill {
 	int cost;
 	String description;
 
-	protected Skill() {
-		skills.put(uniqueId, this);
-	}
-
 	public Skill(ResourceLocation uniqueId) {
-		this();
 		this.uniqueId = uniqueId;
+		skills.put(uniqueId.toString(), this);
 	}
 
 	public Skill(String modid, String name) {
@@ -70,6 +67,10 @@ public class Skill {
 	public Skill setCost(int cost) {
 		this.cost = cost;
 		return this;
+	}
+
+	public int getCost() {
+		return cost;
 	}
 
 	public Skill setRequiredSkills(Skill...skills) {
@@ -136,5 +137,14 @@ public class Skill {
 	 * will get called too (for respective entities)
 	 */
 	public void onPlayerHurtPlayer(LivingHurtEvent e, EntityPlayer attacker, IPlayerDataCapability attackerData, EntityPlayer victim, IPlayerDataCapability victimData) {
+	}
+
+	public String getTranslationKey() {
+		return "skill."+uniqueId.toString().replaceAll("[:/]", ".");
+	}
+
+	@SideOnly(Side.CLIENT)
+	public String getLocalizedName() {
+		return I18n.format(getTranslationKey());
 	}
 }

@@ -15,22 +15,15 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.client.CPacketClientStatus;
-import net.minecraft.stats.Achievement;
 import net.minecraft.stats.AchievementList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Mouse;
 
-import java.awt.*;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 
 @SideOnly(Side.CLIENT)
@@ -53,9 +46,6 @@ public class GuiSkillTree extends GuiScreen implements IProgressMeter {
 	protected double yScrollTarget;
 	private int scrolling;
 	private boolean loadingAchievements = true;
-
-	private int currentPage = -1;
-	private GuiButton button;
 
 	private EntityPlayer player;
 	private IPlayerDataCapability playerData;
@@ -91,7 +81,56 @@ public class GuiSkillTree extends GuiScreen implements IProgressMeter {
 		if (!this.loadingAchievements) {
 			if (button.id == 1) {
 				Minecraft.getMinecraft().displayGuiScreen(null);
+				playerData.syncData(player);
 			}
+		}
+	}
+
+	@Override
+	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+		super.mouseClicked(mouseX, mouseY, mouseButton);
+
+		int i = MathHelper.floor_double(this.xScrollO + (this.xScrollP - this.xScrollO));
+		int j = MathHelper.floor_double(this.yScrollO + (this.yScrollP - this.yScrollO));
+
+		if (i < X_MIN) {
+			i = X_MIN;
+		}
+
+		if (j < Y_MIN) {
+			j = Y_MIN;
+		}
+
+		if (i >= X_MAX) {
+			i = X_MAX - 1;
+		}
+
+		if (j >= Y_MAX) {
+			j = Y_MAX - 1;
+		}
+
+		int k = (this.width - this.imageWidth) / 2;
+		int l = (this.height - this.imageHeight) / 2;
+		int i1 = k + 16;
+		int j1 = l + 17;
+
+		int y = 0;
+		for (Level level : playerData.getCreatureType().getBehaviour().getSkillTree().getLevels()) {
+			int x = 0;
+			for (Skill skill : level.skills) {
+				int x1 = x-i-23;
+				int y1 = y-j-120;
+
+				float w = (float)(mouseX - i1) * this.zoom;
+				float h = (float)(mouseY - j1) * this.zoom;
+
+				if (w >= x1 && w <= x1 + 22 && h >= y1 && h <= y1 + 22) {
+					playerData.addSkill(skill, player);
+				}
+
+				x+=27;
+			}
+			y+=37;
 		}
 	}
 
@@ -101,7 +140,7 @@ public class GuiSkillTree extends GuiScreen implements IProgressMeter {
 	 */
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
 		if (this.mc.gameSettings.keyBindInventory.isActiveAndMatches(keyCode)) {
-			this.mc.displayGuiScreen(null);
+			playerData.syncData(player);
 			this.mc.setIngameFocus();
 		} else {
 			super.keyTyped(typedChar, keyCode);
@@ -340,7 +379,10 @@ public class GuiSkillTree extends GuiScreen implements IProgressMeter {
 				this.drawTexturedModalRect(x1, y1,2,204, 22, 22);
 				//skill.drawIcon(x1, y1, 22, 22);
 
-				if (mouseX-100 >= x1 && mouseX-100 <= x1 + 22 && mouseY-35 >= y1 && mouseY-35 <= y1 + 22) {
+				float w = (float)(mouseX - i1) * this.zoom;
+				float h = (float)(mouseY - j1) * this.zoom;
+
+				if (w >= x1 && w <= x1 + 22 && h >= y1 && h <= y1 + 22) {
 					toolTipSkill = skill;
 				}
 
@@ -368,7 +410,7 @@ public class GuiSkillTree extends GuiScreen implements IProgressMeter {
 		if (toolTipSkill != null) {
 			StringBuilder builder = new StringBuilder();
 
-			builder.append(toolTipSkill.toString());
+			builder.append(toolTipSkill.getLocalizedName());
 
 			renderToolTip(builder, mouseX, mouseY);
 		}

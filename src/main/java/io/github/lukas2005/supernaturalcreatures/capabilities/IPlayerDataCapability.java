@@ -2,8 +2,8 @@ package io.github.lukas2005.supernaturalcreatures.capabilities;
 
 import io.github.lukas2005.supernaturalcreatures.NBTTagListIterator;
 import io.github.lukas2005.supernaturalcreatures.enums.CreatureType;
-import io.github.lukas2005.supernaturalcreatures.network.NetworkManager;
 import io.github.lukas2005.supernaturalcreatures.network.CapabilitySyncMessage;
+import io.github.lukas2005.supernaturalcreatures.network.NetworkManager;
 import io.github.lukas2005.supernaturalcreatures.skill.Skill;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -16,7 +16,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
-import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -28,17 +27,23 @@ import java.util.Map;
 public interface IPlayerDataCapability {
 
 	void setCreatureType(CreatureType type);
+
 	CreatureType getCreatureType();
 
 	void setTransformed(boolean transformed);
+
 	boolean isTransformed();
 
 	void setLevel(int newLevel);
-	void incrementLevel();
-	void decrementLevel();
+
+	int incrementLevel();
+
+	int decrementLevel();
+
 	int getLevel();
 
 	void setData(String key, String value);
+
 	String getData(String key);
 
 	Map<String, String> getDataMap();
@@ -48,9 +53,34 @@ public interface IPlayerDataCapability {
 	void syncData(EntityPlayer player);
 
 	ArrayList<Skill> getSkills();
+
 	void setSkills(ArrayList<Skill> skills);
+
 	void addSkill(Skill skills);
+	void addSkill(Skill skills, EntityPlayer player);
+
 	void removeSkill(Skill skills);
+
+
+	int getSkillPoints();
+
+	void setSkillPoints(int amount);
+
+	int incrementSkillPoints();
+
+	int decrementSkillPoints();
+
+	int subtractSkillPoints(int amount);
+
+	int addSkillPoints(int amount);
+
+	int getUsedSkillPoints();
+	void setUsedSkillPoints(int amount);
+
+	int addUsedSkillPoints(int amount);
+
+	int subtractUsedSkillPoints(int amount);
+
 
 	class Storage implements Capability.IStorage<IPlayerDataCapability> {
 
@@ -74,10 +104,16 @@ public interface IPlayerDataCapability {
 			NBTTagList skillList = new NBTTagList();
 
 			for (Skill e : instance.getSkills()) {
-				skillList.appendTag(new NBTTagString(e.toString()));
+				if (e != null) {
+					skillList.appendTag(new NBTTagString(e.toString()));
+				}
 			}
 
 			nbt.setTag("skillList", skillList);
+
+			nbt.setInteger("skillPoints", instance.getSkillPoints());
+			nbt.setInteger("usedSkillPoints", instance.getUsedSkillPoints());
+
 
 			return nbt;
 		}
@@ -97,11 +133,16 @@ public interface IPlayerDataCapability {
 
 			instance.setLevel(nbt.getInteger("level"));
 
-			NBTTagList skillList = nbt.getTagList("skillList", 8);
+			NBTTagList skillList = (NBTTagList) nbt.getTag("skillList");
 
 			for (NBTBase base : new NBTTagListIterator(skillList)) {
-				instance.addSkill(Skill.skills.get(new ResourceLocation(base.toString())));
+				if (base.getId() != 0) {
+					instance.addSkill(Skill.skills.get(((NBTTagString)base).getString()));
+				}
 			}
+
+			instance.setUsedSkillPoints(nbt.getInteger("usedSkillPoints"));
+			instance.setSkillPoints(nbt.getInteger("skillPoints"));
 		}
 	}
 
@@ -115,6 +156,9 @@ public interface IPlayerDataCapability {
 		int level = 0;
 
 		ArrayList<Skill> skills = new ArrayList<>();
+
+		int skillPoints = 0;
+		int usedSkillPoints = 0;
 
 		@Override
 		public void setCreatureType(CreatureType type) {
@@ -139,16 +183,20 @@ public interface IPlayerDataCapability {
 		@Override
 		public void setLevel(int newLevel) {
 			level = newLevel;
+
+			skillPoints = (level / 2) - usedSkillPoints;
 		}
 
 		@Override
-		public void incrementLevel() {
-			level++;
+		public int incrementLevel() {
+			setLevel(getLevel() + 1);
+			return level;
 		}
 
 		@Override
-		public void decrementLevel() {
-			level--;
+		public int decrementLevel() {
+			setLevel(getLevel() - 1);
+			return level;
 		}
 
 		@Override
@@ -186,6 +234,8 @@ public interface IPlayerDataCapability {
 		public void syncData(EntityPlayer player) {
 			if (!player.getEntityWorld().isRemote) {
 				NetworkManager.INSTANCE.sendTo(new CapabilitySyncMessage<>(this, ModCapabilities.PLAYER_DATA_CAPABILITY), (EntityPlayerMP) player);
+			} else {
+				NetworkManager.INSTANCE.sendToServer(new CapabilitySyncMessage<>(this, ModCapabilities.PLAYER_DATA_CAPABILITY));
 			}
 		}
 
@@ -200,6 +250,18 @@ public interface IPlayerDataCapability {
 		}
 
 		@Override
+		public void addSkill(Skill skill, EntityPlayer player) {
+			if (player.isCreative()) {
+				addSkill(skill);
+			} else if (getSkillPoints() >= skill.getCost()) {
+				addSkill(skill);
+
+				subtractSkillPoints(skill.getCost());
+				addUsedSkillPoints(skill.getCost());
+			}
+		}
+
+		@Override
 		public void addSkill(Skill skill) {
 			if (!skills.contains(skill)) {
 				skills.add(skill);
@@ -209,6 +271,62 @@ public interface IPlayerDataCapability {
 		@Override
 		public void removeSkill(Skill skill) {
 			skills.remove(skill);
+		}
+
+		@Override
+		public int getSkillPoints() {
+			return skillPoints;
+		}
+
+		@Override
+		public void setSkillPoints(int amount) {
+			skillPoints = amount;
+		}
+
+		@Override
+		public int incrementSkillPoints() {
+			setSkillPoints(getSkillPoints() + 1);
+			return skillPoints;
+		}
+
+		@Override
+		public int decrementSkillPoints() {
+			setSkillPoints(getSkillPoints() - 1);
+			return skillPoints;
+		}
+
+		@Override
+		public int subtractSkillPoints(int amount) {
+			setSkillPoints(getSkillPoints() - amount);
+			return skillPoints;
+		}
+
+		@Override
+		public int addSkillPoints(int amount) {
+			setSkillPoints(getSkillPoints() + amount);
+			return skillPoints;
+		}
+
+		@Override
+		public int getUsedSkillPoints() {
+			return usedSkillPoints;
+		}
+
+		@Override
+		public void setUsedSkillPoints(int amount) {
+			usedSkillPoints = amount;
+		}
+
+		@Override
+		public int addUsedSkillPoints(int amount) {
+			setSkillPoints(getSkillPoints() + amount);
+			return usedSkillPoints;
+		}
+
+		@Override
+		public int subtractUsedSkillPoints(int amount) {
+			setSkillPoints(getSkillPoints() - amount);
+			return usedSkillPoints;
 		}
 	}
 

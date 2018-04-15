@@ -12,10 +12,10 @@ public class SkillHelper {
 		List<Skill> skills = new ArrayList<>();
 		for (Level l : tree.levels) {
 
-			Constructor<Skill> c = (Constructor<Skill>) clazz.getConstructors()[0];
+			Constructor c = clazz.getConstructors()[0];
 			c.setAccessible(true);
 
-			Skill s = c.newInstance(constructorParams);
+			Skill s = (Skill) c.newInstance(constructorParams);
 			l.addSkill(s);
 
 			if (chainSkillsTogether && prevSkill != null) {
