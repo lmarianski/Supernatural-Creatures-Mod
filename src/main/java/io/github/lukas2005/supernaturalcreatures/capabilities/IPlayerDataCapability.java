@@ -12,7 +12,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
@@ -57,6 +56,7 @@ public interface IPlayerDataCapability {
 	void setSkills(ArrayList<Skill> skills);
 
 	void addSkill(Skill skills);
+
 	void addSkill(Skill skills, EntityPlayer player);
 
 	void removeSkill(Skill skills);
@@ -75,6 +75,7 @@ public interface IPlayerDataCapability {
 	int addSkillPoints(int amount);
 
 	int getUsedSkillPoints();
+
 	void setUsedSkillPoints(int amount);
 
 	int addUsedSkillPoints(int amount);
@@ -137,7 +138,7 @@ public interface IPlayerDataCapability {
 
 			for (NBTBase base : new NBTTagListIterator(skillList)) {
 				if (base.getId() != 0) {
-					instance.addSkill(Skill.skills.get(((NBTTagString)base).getString()));
+					instance.addSkill(Skill.skills.get(((NBTTagString) base).getString()));
 				}
 			}
 
@@ -264,7 +265,9 @@ public interface IPlayerDataCapability {
 		@Override
 		public void addSkill(Skill skill) {
 			if (!skills.contains(skill)) {
-				skills.add(skill);
+				//if (skill.getDependencies().size() > 0 && getSkills().containsAll(skill.getDependencies())) {
+					skills.add(skill);
+				//}
 			}
 		}
 
