@@ -17,10 +17,7 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 public interface IPlayerDataCapability {
@@ -51,9 +48,9 @@ public interface IPlayerDataCapability {
 
 	void syncData(EntityPlayer player);
 
-	ArrayList<Skill> getSkills();
+	List<Skill> getSkills();
 
-	void setSkills(ArrayList<Skill> skills);
+	void setSkills(List<Skill> skills);
 
 	void addSkill(Skill skills);
 
@@ -156,7 +153,7 @@ public interface IPlayerDataCapability {
 
 		int level = 0;
 
-		ArrayList<Skill> skills = new ArrayList<>();
+		List<Skill> skills = new LinkedList<>();
 
 		int skillPoints = 0;
 		int usedSkillPoints = 0;
@@ -241,12 +238,12 @@ public interface IPlayerDataCapability {
 		}
 
 		@Override
-		public ArrayList<Skill> getSkills() {
+		public List<Skill> getSkills() {
 			return skills;
 		}
 
 		@Override
-		public void setSkills(ArrayList<Skill> skills) {
+		public void setSkills(List<Skill> skills) {
 			this.skills = skills;
 		}
 
@@ -265,9 +262,9 @@ public interface IPlayerDataCapability {
 		@Override
 		public void addSkill(Skill skill) {
 			if (!skills.contains(skill)) {
-				//if (skill.getDependencies().size() > 0 && getSkills().containsAll(skill.getDependencies())) {
+				if (skill.getDependencies().size() == 0 || getSkills().containsAll(skill.getDependencies())) {
 					skills.add(skill);
-				//}
+				}
 			}
 		}
 

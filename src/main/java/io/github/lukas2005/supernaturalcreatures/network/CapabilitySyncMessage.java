@@ -1,7 +1,6 @@
 package io.github.lukas2005.supernaturalcreatures.network;
 
 import io.github.lukas2005.supernaturalcreatures.Utils;
-import io.github.lukas2005.supernaturalcreatures.capabilities.IPlayerDataCapability;
 import io.github.lukas2005.supernaturalcreatures.capabilities.ModCapabilities;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;

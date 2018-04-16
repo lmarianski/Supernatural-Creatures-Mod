@@ -9,7 +9,7 @@ public class NBTTagListIterator implements Iterable<NBTBase>, Iterator<NBTBase> 
 
 	NBTTagList list;
 
-	int i = 0;
+	int i = -1;
 
 	public NBTTagListIterator(NBTTagList list) {
 		this.list = list;

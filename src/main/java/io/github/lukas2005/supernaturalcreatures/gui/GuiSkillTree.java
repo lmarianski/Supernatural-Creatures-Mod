@@ -80,8 +80,8 @@ public class GuiSkillTree extends GuiScreen implements IProgressMeter {
 	protected void actionPerformed(GuiButton button) {
 		if (!this.loadingAchievements) {
 			if (button.id == 1) {
-				Minecraft.getMinecraft().displayGuiScreen(null);
 				playerData.syncData(player);
+				mc.setIngameFocus();
 			}
 		}
 	}
