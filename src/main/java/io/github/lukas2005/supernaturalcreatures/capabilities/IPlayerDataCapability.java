@@ -1,6 +1,7 @@
 package io.github.lukas2005.supernaturalcreatures.capabilities;
 
 import io.github.lukas2005.supernaturalcreatures.NBTTagListIterator;
+import io.github.lukas2005.supernaturalcreatures.Utils;
 import io.github.lukas2005.supernaturalcreatures.enums.CreatureType;
 import io.github.lukas2005.supernaturalcreatures.network.CapabilitySyncMessage;
 import io.github.lukas2005.supernaturalcreatures.network.NetworkManager;
@@ -12,6 +13,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Util;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
@@ -42,6 +44,8 @@ public interface IPlayerDataCapability {
 
 	String getData(String key);
 
+	boolean hasData(String key);
+
 	Map<String, String> getDataMap();
 
 	void cloneTo(IPlayerDataCapability target);
@@ -57,7 +61,6 @@ public interface IPlayerDataCapability {
 	void addSkill(Skill skills, EntityPlayer player);
 
 	void removeSkill(Skill skills);
-
 
 	int getSkillPoints();
 
@@ -79,6 +82,7 @@ public interface IPlayerDataCapability {
 
 	int subtractUsedSkillPoints(int amount);
 
+	List<Skill> getHighestLevelSkills(boolean reCreate);
 
 	class Storage implements Capability.IStorage<IPlayerDataCapability> {
 
@@ -154,6 +158,8 @@ public interface IPlayerDataCapability {
 		int level = 0;
 
 		List<Skill> skills = new LinkedList<>();
+		List<Skill> hLSkills = new ArrayList<>();
+
 
 		int skillPoints = 0;
 		int usedSkillPoints = 0;
@@ -218,6 +224,11 @@ public interface IPlayerDataCapability {
 		}
 
 		@Override
+		public boolean hasData(String key) {
+			return data.containsKey(key);
+		}
+
+		@Override
 		public Map<String, String> getDataMap() {
 			return Collections.unmodifiableMap(data);
 		}
@@ -270,7 +281,13 @@ public interface IPlayerDataCapability {
 
 		@Override
 		public void removeSkill(Skill skill) {
-			skills.remove(skill);
+			if (skills.contains(skill)) {
+				if (!Utils.containsAny(getSkills(), skill.getDependants())) {
+					skills.remove(skill);
+					addSkillPoints(skill.getCost());
+					subtractUsedSkillPoints(skill.getCost());
+				}
+			}
 		}
 
 		@Override
@@ -328,6 +345,12 @@ public interface IPlayerDataCapability {
 			setSkillPoints(getSkillPoints() - amount);
 			return usedSkillPoints;
 		}
+
+		@Override
+		public List<Skill> getHighestLevelSkills(boolean reCreate) {
+			if (reCreate) hLSkills = Utils.getHighestLevelSkills(getSkills());
+			return hLSkills;
+		}
 	}
 
 	class Provider implements ICapabilitySerializable<NBTTagCompound> {
@@ -345,7 +368,10 @@ public interface IPlayerDataCapability {
 
 		@Override
 		public <T> T getCapability(Capability<T> capability, @Nullable EnumFacing facing) {
-			return (T) impl;
+			if (hasCapability(capability, facing)) {
+				return (T) impl;
+			}
+			return null;
 		}
 
 		@Override

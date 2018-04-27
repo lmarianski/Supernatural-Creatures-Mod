@@ -41,7 +41,7 @@ public class CapabilitySyncMessage<T> implements IMessage {
 		@Override
 		public IMessage onMessage(CapabilitySyncMessage message, MessageContext ctx) {
 
-			Minecraft.getMinecraft().addScheduledTask(() -> {
+			Utils.getThreadListener(ctx).addScheduledTask(() -> {
 				EntityPlayer player = Utils.getPlayerInstance(ctx);
 
 				Capability cap = ModCapabilities.CAPABILITY_MAP.get(message.instanceClassName);

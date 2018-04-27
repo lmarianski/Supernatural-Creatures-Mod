@@ -17,6 +17,8 @@ public class NetworkManager {
 		INSTANCE.registerMessage(CapabilitySyncMessage.Handler.class, CapabilitySyncMessage.class, id++, Side.CLIENT);
 		INSTANCE.registerMessage(CapabilitySyncMessage.Handler.class, CapabilitySyncMessage.class, id++, Side.SERVER);
 
+		INSTANCE.registerMessage(DamageEntityMessage.Handler.class, DamageEntityMessage.class, id++, Side.SERVER);
+
 		NetworkRegistry.INSTANCE.registerGuiHandler(Main.INSTANCE, new GuiHandler());
 	}
 

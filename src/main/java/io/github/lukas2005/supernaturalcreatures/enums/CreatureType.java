@@ -5,6 +5,7 @@ import io.github.lukas2005.supernaturalcreatures.behaviour.HumanBehaviour;
 import io.github.lukas2005.supernaturalcreatures.behaviour.VampireBehaviour;
 import io.github.lukas2005.supernaturalcreatures.behaviour.WerewolfBehaviour;
 import io.github.lukas2005.supernaturalcreatures.skill.SkillTree;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 public enum CreatureType {
 

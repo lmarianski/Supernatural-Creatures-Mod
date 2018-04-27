@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.DamageSource;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 public interface CreatureBehaviour {
 
@@ -27,4 +28,6 @@ public interface CreatureBehaviour {
 	SkillTree getSkillTree();
 
 	void initSkillTree(SkillTree tree);
+
+	void onPlayerTick(TickEvent.PlayerTickEvent e, IPlayerDataCapability playerData);
 }

@@ -125,7 +125,11 @@ public class GuiSkillTree extends GuiScreen implements IProgressMeter {
 				float h = (float)(mouseY - j1) * this.zoom;
 
 				if (w >= x1 && w <= x1 + 22 && h >= y1 && h <= y1 + 22) {
-					playerData.addSkill(skill, player);
+					if (!playerData.getSkills().contains(skill)) {
+						playerData.addSkill(skill, player);
+					} else {
+						playerData.removeSkill(skill);
+					}
 				}
 
 				x+=27;

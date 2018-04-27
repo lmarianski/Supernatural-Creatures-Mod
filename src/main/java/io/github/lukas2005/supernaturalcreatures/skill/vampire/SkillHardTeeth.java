@@ -2,6 +2,7 @@ package io.github.lukas2005.supernaturalcreatures.skill.vampire;
 
 import io.github.lukas2005.supernaturalcreatures.DamageSources;
 import io.github.lukas2005.supernaturalcreatures.capabilities.IPlayerDataCapability;
+import io.github.lukas2005.supernaturalcreatures.potions.SanguinarePotion;
 import io.github.lukas2005.supernaturalcreatures.skill.Skill;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,10 +23,15 @@ public class SkillHardTeeth extends Skill {
 	@Override
 	public void onPlayerAttack(LivingHurtEvent e, EntityPlayer attacker, IPlayerDataCapability attackerData, EntityLivingBase victim) {
 		super.onPlayerAttack(e, attacker, attackerData, victim);
-		if (DamageSources.areEqual(e.getSource(), DamageSources.vampire_bite)) {
+		if (DamageSources.areEqual(e.getSource(), DamageSources.VAMPIRE_BITE)) {
 			e.setAmount(e.getAmount()+3*lvl);
 			if (lvl >= 3) {
-				victim.addPotionEffect(new PotionEffect(MobEffects.POISON, 60, 100, false, false));
+				if (lvl >= 4 && attacker.isSneaking()) {
+					e.setAmount(0);
+					SanguinarePotion.addRandom(victim);
+				} else {
+					victim.addPotionEffect(new PotionEffect(MobEffects.POISON, 60, 100, false, false));
+				}
 			}
 		}
 	}

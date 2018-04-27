@@ -102,8 +102,7 @@ public class Skill {
 		}
 	}
 
-	public void onPlayerTick(TickEvent.PlayerTickEvent e) {
-
+	public void onPlayerTick(TickEvent.PlayerTickEvent e, IPlayerDataCapability playerData) {
 	}
 
 	/**

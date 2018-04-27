@@ -56,11 +56,13 @@ public class EventHandler {
 			if (type.getBehaviour().shouldApplyBuf(BufType.SPEED_BOOST, e.player, playerData, type))
 				e.player.setAIMoveSpeed(e.player.getAIMoveSpeed() + type.baseSpeed * type.getBehaviour().getMultiplierForBuf(BufType.SPEED_BOOST, e.player, playerData, playerData.getLevel()));
 
-			for (Skill skill : playerData.getSkills()) {
+			for (Skill skill : playerData.getHighestLevelSkills(true)) {
 				if (skill != null) {
-					skill.onPlayerTick(e);
+					skill.onPlayerTick(e, playerData);
 				}
 			}
+
+			type.getBehaviour().onPlayerTick(e, playerData);
 		}
 	}
 
@@ -80,7 +82,7 @@ public class EventHandler {
 	public static void onHurt(LivingHurtEvent e) {
 		IPlayerDataCapability attackerData = null;
 		IPlayerDataCapability victimData = null;
-		
+
 		if (e.getSource().getSourceOfDamage() instanceof EntityPlayer) {
 			EntityPlayer player = (EntityPlayer) e.getSource().getSourceOfDamage();
 
@@ -89,8 +91,8 @@ public class EventHandler {
 
 			if (type.getBehaviour().shouldApplyBuf(BufType.STRENGTH_BOOST, player, attackerData, type))
 				e.setAmount(e.getAmount() + type.baseStrength * type.getBehaviour().getMultiplierForBuf(BufType.STRENGTH_BOOST, player, attackerData, attackerData.getLevel()));
-			
-			for (Skill skill : attackerData.getSkills()) {
+
+			for (Skill skill : attackerData.getHighestLevelSkills(false)) {
 				skill.onPlayerAttack(e, player, attackerData, e.getEntityLiving());
 			}
 		}
@@ -124,10 +126,10 @@ public class EventHandler {
 
 			if (e.getSource() == DamageSource.fall) {
 				if (type.getBehaviour().shouldApplyBuf(BufType.FALL_DISTANCE, player, victimData, type))
-					e.setAmount(e.getAmount() - type.baseFallDistance *  type.getBehaviour().getMultiplierForBuf(BufType.FALL_DISTANCE, player, victimData, victimData.getLevel()) * 2);
+					e.setAmount(e.getAmount() - type.baseFallDistance * type.getBehaviour().getMultiplierForBuf(BufType.FALL_DISTANCE, player, victimData, victimData.getLevel()) * 2);
 			}
 
-			for (Skill skill : victimData.getSkills()) {
+			for (Skill skill : victimData.getHighestLevelSkills(false)) {
 				skill.onPlayerHurt(e, (EntityLivingBase) e.getSource().getSourceOfDamage(), player, victimData);
 			}
 		}
@@ -135,12 +137,12 @@ public class EventHandler {
 			EntityPlayer attacker = (EntityPlayer) e.getSource().getSourceOfDamage();
 			EntityPlayer victim = (EntityPlayer) e.getEntityLiving();
 
-			for (Skill skill : attackerData.getSkills()) {
+			for (Skill skill : attackerData.getHighestLevelSkills(false)) {
 				skill.onPlayerHurt(e, (EntityLivingBase) e.getSource().getSourceOfDamage(), attacker, attackerData);
 			}
 
 
-			for (Skill skill : victimData.getSkills()) {
+			for (Skill skill : victimData.getHighestLevelSkills(false)) {
 				skill.onPlayerHurt(e, (EntityLivingBase) e.getSource().getSourceOfDamage(), victim, victimData);
 			}
 		}
@@ -156,23 +158,22 @@ public class EventHandler {
 			CreatureType type = playerData.getCreatureType();
 
 			if (type.getBehaviour().shouldApplyBuf(BufType.JUMP_BOOST, player, playerData, type))
-				if (type.baseJumpHeight > 0) player.addVelocity(0, (type.baseJumpHeight * type.getBehaviour().getMultiplierForBuf(BufType.JUMP_BOOST, player, playerData, playerData.getLevel()) + 0.5f) * 0.1F, 0);
+				if (type.baseJumpHeight > 0)
+					player.addVelocity(0, (type.baseJumpHeight * type.getBehaviour().getMultiplierForBuf(BufType.JUMP_BOOST, player, playerData, playerData.getLevel()) + 0.5f) * 0.1F, 0);
 			//player.jump(); // Never ever uncomment this
 		}
 	}
 
 	@SubscribeEvent
 	public static void onPlayerRespawn(PlayerEvent.Clone e) {
-		if (e.isWasDeath()) {
-			EntityPlayer newPlayer = e.getEntityPlayer();
-			EntityPlayer oldPlayer = e.getOriginal();
+		EntityPlayer newPlayer = e.getEntityPlayer();
+		EntityPlayer oldPlayer = e.getOriginal();
 
 
-			IPlayerDataCapability newPlayerData = newPlayer.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
-			IPlayerDataCapability oldPlayerData = oldPlayer.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
+		IPlayerDataCapability newPlayerData = newPlayer.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
+		IPlayerDataCapability oldPlayerData = oldPlayer.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
 
-			oldPlayerData.cloneTo(newPlayerData);
-		}
+		oldPlayerData.cloneTo(newPlayerData);
 	}
 
 	public static void addPotion(EntityLivingBase e, Potion potion, int duration, int amplifier, boolean ambient, boolean showParticles) {

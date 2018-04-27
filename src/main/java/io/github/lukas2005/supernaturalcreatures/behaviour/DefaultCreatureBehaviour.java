@@ -12,6 +12,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 public class DefaultCreatureBehaviour implements CreatureBehaviour {
 
@@ -80,6 +81,10 @@ public class DefaultCreatureBehaviour implements CreatureBehaviour {
 
 	@Override
 	public void initSkillTree(SkillTree tree) {
+	}
+
+	@Override
+	public void onPlayerTick(TickEvent.PlayerTickEvent e, IPlayerDataCapability playerData) {
 	}
 
 }
