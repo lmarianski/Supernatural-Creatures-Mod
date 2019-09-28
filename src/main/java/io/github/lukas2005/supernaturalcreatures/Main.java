@@ -1,60 +1,114 @@
 package io.github.lukas2005.supernaturalcreatures;
 
-import io.github.lukas2005.supernaturalcreatures.behaviour.VampireBehaviour;
-import io.github.lukas2005.supernaturalcreatures.capabilities.ModCapabilities;
-import io.github.lukas2005.supernaturalcreatures.entity.ModEntities;
+import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import io.github.lukas2005.supernaturalcreatures.network.NetworkManager;
+import io.github.lukas2005.supernaturalcreatures.player.CreatureType;
+import io.github.lukas2005.supernaturalcreatures.player.SCMPlayer;
+import io.github.lukas2005.supernaturalcreatures.player.behaviour.WerewolfBehaviour;
+import io.github.lukas2005.supernaturalcreatures.player.werewolf.EnumPackRank;
+import io.github.lukas2005.supernaturalcreatures.proxy.ClientProxy;
 import io.github.lukas2005.supernaturalcreatures.proxy.IProxy;
-import net.minecraft.launchwrapper.Launch;
+import io.github.lukas2005.supernaturalcreatures.proxy.ServerProxy;
+import net.minecraft.command.Commands;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.Logger;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.server.command.EnumArgument;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-@Mod(modid = Reference.MOD_ID, name = Reference.NAME, version = Reference.VERSION)
+@Mod(Reference.MOD_ID)
+@Mod.EventBusSubscriber
 public class Main {
 
-	@Mod.Instance(Reference.MOD_ID)
-	public static Main INSTANCE;
+    public static final Logger LOGGER = LogManager.getLogger();
 
-	@SidedProxy(clientSide = Reference.CLIENT_PROXY, serverSide = Reference.SERVER_PROXY)
-	public static IProxy proxy;
+    public static final IProxy proxy = DistExecutor.runForDist(() -> ClientProxy::new, () -> ServerProxy::new);
 
-	public static Logger logger;
+    public Main() {
+        IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
-	@Mod.EventHandler
-	public void preInit(FMLPreInitializationEvent e) {
-		proxy.preInit(e);
+        eventBus.addListener(this::setup);
+        eventBus.addListener(this::setupClient);
+        //eventBus.addListener(this::serverStarting);
+    }
 
-		logger = (Logger) e.getModLog();
+    private void setup(FMLCommonSetupEvent e) {
+        //if ((Boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment")) logger.setLevel(Level.DEBUG);
 
-		if ((Boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment")) logger.setLevel(Level.DEBUG);
+        ModCapabilities.register();
+        NetworkManager.init();
+    }
 
-		ModCapabilities.register();
-		NetworkManager.init();
-		for (int i = 0; i < VampireBehaviour.EYE_OVERLAY_COUNT; i++) {
-			VampireBehaviour.eyeOverlays.add(new ResourceLocation(Reference.MOD_ID + ":textures/entity/player/overlay/vampire/eyes/eyes" + i + ".png"));
-		}
+    private void setupClient(FMLClientSetupEvent e) {
+        proxy.setupClient(e);
+    }
 
-		for (int i = 0; i < VampireBehaviour.FANG_OVERLAY_COUNT; i++) {
-			VampireBehaviour.fangOverlays.add(new ResourceLocation(Reference.MOD_ID + ":textures/entity/player/overlay/vampire/fangs/fangs" + i + ".png"));
-		}
+    @SubscribeEvent
+    public static void serverStarting(FMLServerStartingEvent e) {
+        e.getCommandDispatcher().register(
+                Commands.literal(Reference.MOD_ID)
+                        .then(Commands.literal("level").then(Commands.argument("level", IntegerArgumentType.integer(0)).executes((ctx) -> {
+                            int level = ctx.getArgument("level", int.class);
+                            if (ctx.getSource().assertIsEntity() instanceof PlayerEntity) {
+                                SCMPlayer player = SCMPlayer.of(ctx.getSource().asPlayer());
+                                player.setLevel(level);
+                                player.syncData(true);
+                            }
+                            return 1;
+                        })))
+                        .then(Commands.literal("werewolf")
+                                .then(Commands.literal("packRank").then(
+                                        Commands.argument("rank", EnumArgument.enumArgument(EnumPackRank.class)).executes((ctx) -> {
+                                            EnumPackRank rank = ctx.getArgument("rank", EnumPackRank.class);
+                                            if (ctx.getSource().assertIsEntity() instanceof PlayerEntity) {
+                                                SCMPlayer player = SCMPlayer.of(ctx.getSource().asPlayer());
+                                                if (player.getCreatureType() == CreatureType.WEREWOLF) {
+                                                    WerewolfBehaviour.WerewolfData data = (WerewolfBehaviour.WerewolfData) player.getCreatureData(CreatureType.WEREWOLF);
+                                                    data.packRank = rank;
+                                                    player.syncData(true);
+                                                }
+                                            }
+                                            return 1;
+                                        })))
+                                .then(Commands.literal("transformed").then(
+                                        Commands.argument("true/false", BoolArgumentType.bool()).executes((ctx) -> {
+                                            boolean transformed = ctx.getArgument("true/false", boolean.class);
+                                            if (ctx.getSource().assertIsEntity() instanceof PlayerEntity) {
+                                                SCMPlayer player = SCMPlayer.of(ctx.getSource().asPlayer());
+                                                if (player.getCreatureType() == CreatureType.WEREWOLF) {
+                                                    player.setTransformed(transformed);
+                                                    player.syncData(true);
+                                                }
+                                            }
+                                            return 1;
+                                        })))
+                                .then(Commands.literal("skin").then(
+                                        Commands.argument("skin", IntegerArgumentType.integer(0, WerewolfBehaviour.SKIN_OVERLAY_COUNT)).executes((ctx) -> {
+                                            ResourceLocation skin = WerewolfBehaviour.skinOverlays.get(ctx.getArgument("skin", int.class));
+                                            if (ctx.getSource().assertIsEntity() instanceof PlayerEntity) {
+                                                SCMPlayer player = SCMPlayer.of(ctx.getSource().asPlayer());
+                                                if (player.getCreatureType() == CreatureType.WEREWOLF) {
+                                                    WerewolfBehaviour.WerewolfData data = (WerewolfBehaviour.WerewolfData) player.getCreatureData(CreatureType.WEREWOLF);
+                                                    data.skin = skin;
+                                                    player.syncData(true);
+                                                }
+                                            }
+                                            return 1;
+                                        })))
+                        )
+        );
 
-		ModEntities.registerEntities();
-	}
 
-	@Mod.EventHandler
-	public void init(FMLInitializationEvent e) {
-		proxy.init(e);
-	}
+    }
 
-	@Mod.EventHandler
-	public void postInit(FMLPostInitializationEvent e) {
-		proxy.postInit(e);
-	}
 
 }

@@ -1,22 +1,10 @@
 package io.github.lukas2005.supernaturalcreatures.proxy;
 
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 public class ServerProxy implements IProxy {
-	@Override
-	public void preInit(FMLPreInitializationEvent e) {
+    @Override
+    public void setupClient(FMLClientSetupEvent e) {
 
-	}
-
-	@Override
-	public void init(FMLInitializationEvent e) {
-
-	}
-
-	@Override
-	public void postInit(FMLPostInitializationEvent e) {
-
-	}
+    }
 }

@@ -1,17 +1,14 @@
 package io.github.lukas2005.supernaturalcreatures.skill;
 
 import io.github.lukas2005.supernaturalcreatures.Reference;
-import io.github.lukas2005.supernaturalcreatures.capabilities.IPlayerDataCapability;
+import io.github.lukas2005.supernaturalcreatures.player.capability.IPlayerData;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.*;
 
@@ -94,27 +91,27 @@ public class Skill {
 		return dependencies;
 	}
 
-	@SideOnly(Side.CLIENT)
+	//@SideOnly(Side.CLIENT)
 	public void drawIcon(int x, int y, int width, int height) {
 		if (icon != null) {
-			Minecraft.getMinecraft().getTextureManager().bindTexture(icon);
-			Gui.drawScaledCustomSizeModalRect(x, y, iconU, iconV, width, height, width, height, width, height);
+			Minecraft.getInstance().getTextureManager().bindTexture(icon);
+			// TODO Gui.drawScaledCustomSizeModalRect(x, y, iconU, iconV, width, height, width, height, width, height);
 		}
 	}
 
-	public void onPlayerTick(TickEvent.PlayerTickEvent e, IPlayerDataCapability playerData) {
+	public void onPlayerTick(TickEvent.PlayerTickEvent e, IPlayerData playerData) {
 	}
 
 	/**
 	 * A LivingHurtEvent but with checks if the attacker is a player
 	 */
-	public void onPlayerAttack(LivingHurtEvent e, EntityPlayer attacker, IPlayerDataCapability attackerData, EntityLivingBase victim) {
+	public void onPlayerAttack(LivingHurtEvent e, PlayerEntity attacker, IPlayerData attackerData, LivingEntity victim) {
 	}
 
 	/**
 	 * A LivingHurtEvent but with checks if the victim is a player
 	 */
-	public void onPlayerHurt(LivingHurtEvent e, EntityLivingBase attacker, EntityPlayer victim, IPlayerDataCapability victimData) {
+	public void onPlayerHurt(LivingHurtEvent e, LivingEntity attacker, PlayerEntity victim, IPlayerData victimData) {
 	}
 
 	/**
@@ -124,7 +121,7 @@ public class Skill {
 	 * {@link #onPlayerAttack}
 	 * will get called too (for respective entities)
 	 */
-	public void onPlayerAttackPlayer(LivingHurtEvent e, EntityPlayer attacker, IPlayerDataCapability attackerData, EntityPlayer victim, IPlayerDataCapability victimData) {
+	public void onPlayerAttackPlayer(LivingHurtEvent e, PlayerEntity attacker, IPlayerData attackerData, PlayerEntity victim, IPlayerData victimData) {
 	}
 
 
@@ -135,14 +132,14 @@ public class Skill {
 	 * {@link #onPlayerAttack}
 	 * will get called too (for respective entities)
 	 */
-	public void onPlayerHurtPlayer(LivingHurtEvent e, EntityPlayer attacker, IPlayerDataCapability attackerData, EntityPlayer victim, IPlayerDataCapability victimData) {
+	public void onPlayerHurtPlayer(LivingHurtEvent e, PlayerEntity attacker, IPlayerData attackerData, PlayerEntity victim, IPlayerData victimData) {
 	}
 
 	public String getTranslationKey() {
 		return "skill."+uniqueId.toString().replaceAll("[:/]", ".");
 	}
 
-	@SideOnly(Side.CLIENT)
+	//@SideOnly(Side.CLIENT)
 	public String getLocalizedName() {
 		return I18n.format(getTranslationKey());
 	}

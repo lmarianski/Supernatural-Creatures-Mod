@@ -1,56 +1,86 @@
 package io.github.lukas2005.supernaturalcreatures.network;
 
-import io.github.lukas2005.supernaturalcreatures.Utils;
-import io.github.lukas2005.supernaturalcreatures.capabilities.ModCapabilities;
-import io.netty.buffer.ByteBuf;
+import io.github.lukas2005.supernaturalcreatures.ModCapabilities;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.entity.Entity;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.fml.network.NetworkEvent;
 
-public class CapabilitySyncMessage<T> implements IMessage {
+import java.util.function.Supplier;
 
-	NBTTagCompound nbt;
-	String instanceClassName;
+public class CapabilitySyncMessage implements IMessage {
+
+	public CompoundNBT nbt;
+	public String capKey;
+	public int entityId;
+	public SyncTarget target;
 
 	public CapabilitySyncMessage() {}
 
-	public CapabilitySyncMessage(T instance, Capability<T> capability) {
-		nbt = (NBTTagCompound) capability.writeNBT(instance, null);
-		this.instanceClassName = instance.getClass().getDeclaringClass().getName();
+	public CapabilitySyncMessage(ISyncable instance, Capability capability, SyncTarget target) {
+		nbt = (CompoundNBT) capability.writeNBT(instance, null);
+		this.capKey = instance.getCapKey().toString();
+		this.entityId = instance.getEntityID();
+		this.target = target;
 	}
 
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		nbt = ByteBufUtils.readTag(buf);
-		instanceClassName = ByteBufUtils.readUTF8String(buf);
+	public static void encode(CapabilitySyncMessage message, PacketBuffer buf) {
+		buf.writeCompoundTag(message.nbt);
+		buf.writeString(message.capKey);
+		buf.writeInt(message.entityId);
+		buf.writeEnumValue(message.target);
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf) {
-		ByteBufUtils.writeTag(buf, nbt);
-		ByteBufUtils.writeUTF8String(buf, instanceClassName);
+	public static CapabilitySyncMessage decode(PacketBuffer buf) {
+		CapabilitySyncMessage message = new CapabilitySyncMessage();
+		message.nbt = buf.readCompoundTag();
+		message.capKey = buf.readString();
+		message.entityId = buf.readInt();
+		message.target = buf.readEnumValue(SyncTarget.class);
+
+		return message;
 	}
 
-	public static class Handler implements IMessageHandler<CapabilitySyncMessage, IMessage> {
+	public static void handle(CapabilitySyncMessage message, Supplier<NetworkEvent.Context> ctx) {
+		ctx.get().enqueueWork(() -> {
+			World world = Minecraft.getInstance().world;
+			Capability cap = ModCapabilities.CAPABILITY_MAP.get(new ResourceLocation(message.capKey));
 
-		@Override
-		public IMessage onMessage(CapabilitySyncMessage message, MessageContext ctx) {
+			boolean flag = false;
+			try {
+				ISyncable s = null;
+				switch (message.target) {
+					case PLAYER:
+						flag = true;
+					case ENTITY:
+						Entity e = flag ? Minecraft.getInstance().player : world.getEntityByID(message.entityId);
+						s = (ISyncable) e.getCapability(cap).orElseThrow(()->new Exception("Null capability!"));
+						break;
+					case DIMENSION:
+						if (world.getDimension().getType().getId() == message.entityId) {
+							s = (ISyncable) world.getCapability(cap).orElseThrow(()->new Exception("Null capability!"));
+						}
+						break;
+				}
 
-			Utils.getThreadListener(ctx).addScheduledTask(() -> {
-				EntityPlayer player = Utils.getPlayerInstance(ctx);
+				if (s != null)
+					cap.readNBT(s, null, message.nbt);
+			} catch (Throwable throwable) {
+				throwable.printStackTrace();
+			}
 
-				Capability cap = ModCapabilities.CAPABILITY_MAP.get(message.instanceClassName);
-
-				cap.readNBT(player.getCapability(cap, null), null, message.nbt);
-			});
-
-			return null;
-		}
-
+		});
+		ctx.get().setPacketHandled(true);
 	}
+
+	public enum SyncTarget {
+		ENTITY,
+		PLAYER,
+		DIMENSION
+	}
+
 }

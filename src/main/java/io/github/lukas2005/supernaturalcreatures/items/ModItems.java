@@ -1,18 +1,17 @@
 package io.github.lukas2005.supernaturalcreatures.items;
 
 import io.github.lukas2005.supernaturalcreatures.IHasModel;
-import io.github.lukas2005.supernaturalcreatures.Main;
 import io.github.lukas2005.supernaturalcreatures.Reference;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.ArrayList;
 
-@Mod.EventBusSubscriber
+@Mod.EventBusSubscriber(bus=Mod.EventBusSubscriber.Bus.MOD)
 public class ModItems {
 
 	private static ArrayList<Item> items = new ArrayList<>();
@@ -33,14 +32,14 @@ public class ModItems {
 			if (item instanceof IHasModel) {
 				((IHasModel) item).registerModels();
 			} else {
-				Main.proxy.registerItemModel(item, 0, "inventory");
+				//Main.proxy.registerItemModel(item, 0, "inventory");
 			}
 		}
 	}
 
 	public static Item initHelper(Item item, String name) {
 		items.add(item
-				.setUnlocalizedName(Reference.MOD_ID+"."+name)
+				//.setUnlocalizedName(Reference.MOD_ID+"."+name)
 				.setRegistryName(new ResourceLocation(Reference.MOD_ID, name))
 		);
 		return item;

@@ -1,13 +1,12 @@
 package io.github.lukas2005.supernaturalcreatures.skill.vampire;
 
 import io.github.lukas2005.supernaturalcreatures.DamageSources;
-import io.github.lukas2005.supernaturalcreatures.capabilities.IPlayerDataCapability;
-import io.github.lukas2005.supernaturalcreatures.potions.SanguinarePotion;
+import io.github.lukas2005.supernaturalcreatures.player.capability.IPlayerData;
 import io.github.lukas2005.supernaturalcreatures.skill.Skill;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.MobEffects;
-import net.minecraft.potion.PotionEffect;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 public class SkillHardTeeth extends Skill {
@@ -21,16 +20,17 @@ public class SkillHardTeeth extends Skill {
 	}
 
 	@Override
-	public void onPlayerAttack(LivingHurtEvent e, EntityPlayer attacker, IPlayerDataCapability attackerData, EntityLivingBase victim) {
+	public void onPlayerAttack(LivingHurtEvent e, PlayerEntity attacker, IPlayerData attackerData, LivingEntity victim) {
 		super.onPlayerAttack(e, attacker, attackerData, victim);
 		if (DamageSources.areEqual(e.getSource(), DamageSources.VAMPIRE_BITE)) {
 			e.setAmount(e.getAmount()+3*lvl);
 			if (lvl >= 3) {
 				if (lvl >= 4 && attacker.isSneaking()) {
 					e.setAmount(0);
-					SanguinarePotion.addRandom(victim);
+
+					//TODO SanguinarePotion.addRandom(victim);
 				} else {
-					victim.addPotionEffect(new PotionEffect(MobEffects.POISON, 60, 100, false, false));
+					victim.addPotionEffect(new EffectInstance(Effects.POISON, 60, 100, false, false));
 				}
 			}
 		}

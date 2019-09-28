@@ -1,8 +1,8 @@
 package io.github.lukas2005.supernaturalcreatures.skill.vampire;
 
-import io.github.lukas2005.supernaturalcreatures.capabilities.IPlayerDataCapability;
+import io.github.lukas2005.supernaturalcreatures.player.capability.IPlayerData;
 import io.github.lukas2005.supernaturalcreatures.skill.Skill;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.event.TickEvent;
 
 public class SkillSunScreen extends Skill {
 
@@ -17,8 +17,8 @@ public class SkillSunScreen extends Skill {
 	}
 
 	@Override
-	public void onPlayerTick(TickEvent.PlayerTickEvent e, IPlayerDataCapability playerData) {
+	public void onPlayerTick(TickEvent.PlayerTickEvent e, IPlayerData playerData) {
 		super.onPlayerTick(e, playerData);
-		playerData.setData("vampire.sunDamage", String.valueOf(BASE_SUN_DAMAGE-2*lvl));
+		//playerData.setData("vampire.sunDamage", String.valueOf(BASE_SUN_DAMAGE-2*lvl));
 	}
 }

@@ -1,199 +1,301 @@
 package io.github.lukas2005.supernaturalcreatures;
 
-import io.github.lukas2005.supernaturalcreatures.capabilities.IPlayerDataCapability;
-import io.github.lukas2005.supernaturalcreatures.capabilities.ModCapabilities;
-import io.github.lukas2005.supernaturalcreatures.enums.BufType;
-import io.github.lukas2005.supernaturalcreatures.enums.CreatureType;
-import io.github.lukas2005.supernaturalcreatures.skill.Skill;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.MobEffects;
-import net.minecraft.potion.Potion;
-import net.minecraft.potion.PotionEffect;
+import io.github.lukas2005.supernaturalcreatures.entity.ModEntities;
+import io.github.lukas2005.supernaturalcreatures.player.ConvertManager;
+import io.github.lukas2005.supernaturalcreatures.player.SCMPlayer;
+import io.github.lukas2005.supernaturalcreatures.enums.BuffType;
+import io.github.lukas2005.supernaturalcreatures.player.CreatureType;
+import io.github.lukas2005.supernaturalcreatures.potions.ModEffects;
+import io.github.lukas2005.supernaturalcreatures.world.Pack;
+import io.github.lukas2005.supernaturalcreatures.world.PackHandler;
+import net.minecraft.block.BedBlock;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.potion.Effect;
+import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.ChunkEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-
-import java.lang.reflect.Field;
 
 @Mod.EventBusSubscriber
 public class EventHandler {
 
-	@SubscribeEvent
-	public static void onEntityJoinWorld(EntityJoinWorldEvent e) {
-		if (e.getEntity() instanceof EntityPlayer) {
-			EntityPlayer player = (EntityPlayer) e.getEntity();
-			if (!e.getWorld().isRemote) {
-				IPlayerDataCapability playerData = player.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
-				if (!playerData.getDataMap().containsKey("fangs") || !playerData.getDataMap().containsKey("eyes")) {
-					playerData.setData("vampire.fangs", "0");
-					playerData.setData("vampire.eyes", "0");
+    @SubscribeEvent
+    public static void onEntityJoinWorld(EntityJoinWorldEvent e) {
+        if (e.getEntity() instanceof PlayerEntity) {
+            PlayerEntity player = (PlayerEntity) e.getEntity();
+            if (!e.getWorld().isRemote) {
+                SCMPlayer.of(player).syncData(true);
+            }
+            AttributeModifier.applyModifiers(player);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onChunkLoad(ChunkEvent.Load e) {
+        World world = (World) e.getWorld();
+        ChunkPos pos = e.getChunk().getPos();
+
+        ChunkPos[] arr = {
+                new ChunkPos(pos.x + 1, pos.z),
+                new ChunkPos(pos.x - 1, pos.z),
+                new ChunkPos(pos.x, pos.z + 1),
+                new ChunkPos(pos.x, pos.z - 1),
+                new ChunkPos(pos.x + 1, pos.z + 1),
+                new ChunkPos(pos.x - 1, pos.z - 1),
+                new ChunkPos(pos.x + 1, pos.z - 1),
+                new ChunkPos(pos.x - 1, pos.z + 1),
+        };
+
+        if (world != null && !world.isRemote() && world.getDimension().isSurfaceWorld()) {
+            PackHandler handler = PackHandler.forWorld(world);
+
+            if (!handler.isOccupied(pos)) {
+                if (handler.isAllFree(arr)) {
+					boolean flag = false;
+
+					for (Biome b : e.getChunk().getBiomes()) {
+						if (ModEntities.wolfBiomes.contains(b)) {
+							flag = true;
+							break;
+						}
+					}
+
+					if (flag && world.getRandom().nextFloat() >= 0.99) {
+						handler.newPack((Chunk) e.getChunk());
+                        handler.sync();
+					}
+                } else {
+                	Pack pack = null;
+
+                	if (handler.isOccupied(arr[0])) {
+                		pack = handler.getPackAt(arr[0]);
+					} else if (handler.isOccupied(arr[1])) {
+						pack = handler.getPackAt(arr[1]);
+					} else if (handler.isOccupied(arr[2])) {
+						pack = handler.getPackAt(arr[2]);
+					} else if (handler.isOccupied(arr[3])) {
+						pack = handler.getPackAt(arr[3]);
+					}
+
+                	if (pack != null) {
+						handler.growPack(pack, (Chunk) e.getChunk());
+                        handler.sync();
+					}
 				}
-				playerData.syncData(player);
-			}
-		}
-	}
+            }
+        }
+    }
 
-	@SubscribeEvent
-	public static void onPlayerTick(TickEvent.PlayerTickEvent e) {
-		if (e.phase == TickEvent.Phase.END) {
-			IPlayerDataCapability playerData = e.player.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
+    @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent e) {
+        if (e.phase == TickEvent.Phase.END) {
+            if (e.player.isAlive()) {
+                SCMPlayer playerData = SCMPlayer.of(e.player);
 
-			CreatureType type = playerData.getCreatureType();
+                CreatureType type = playerData.getCreatureType();
 
-			if (type.getBehaviour().shouldApplyBuf(BufType.HEALTH_BOOST, e.player, playerData, type)) {
-				//e.player.setHealth(e.player.getMaxHealth()+type.baseHealth);
-				addPotion(e.player, MobEffects.HEALTH_BOOST, Integer.MAX_VALUE, (int) type.baseHealth, true, false);
-			} else {
-				curePotion(e.player, MobEffects.HEALTH_BOOST);
-			}
+//				for (Skill skill : playerData.getHighestLevelSkills(true)) {
+//					if (skill != null) {
+//						skill.onPlayerTick(e, playerData);
+//					}
+//				}
 
-			if (type.getBehaviour().shouldApplyBuf(BufType.SPEED_BOOST, e.player, playerData, type))
-				e.player.setAIMoveSpeed(e.player.getAIMoveSpeed() + type.baseSpeed * type.getBehaviour().getMultiplierForBuf(BufType.SPEED_BOOST, e.player, playerData, playerData.getLevel()));
+                type.getBehaviour().onPlayerTick(e, playerData);
+            }
+        }
+    }
 
-			for (Skill skill : playerData.getHighestLevelSkills(true)) {
-				if (skill != null) {
-					skill.onPlayerTick(e, playerData);
-				}
-			}
+    @SubscribeEvent
+    public static void onBlockUse(PlayerInteractEvent.RightClickBlock e) {
+        if (e.getWorld().getBlockState(e.getPos()).getBlock() instanceof BedBlock) {
+            EffectInstance effect = e.getEntityLiving().getActivePotionEffect(ModEffects.WAKEFULNESS);
+            if (effect != null) {
+                e.setCanceled(true);
+                if (e.getEntityLiving() instanceof PlayerEntity) {
+                    ((PlayerEntity) e.getEntityLiving()).sendStatusMessage(new TranslationTextComponent("effect.wakefulness.bed").applyTextStyles(TextFormatting.GRAY, TextFormatting.ITALIC), true);
+                }
+            }
+        }
+    }
 
-			type.getBehaviour().onPlayerTick(e, playerData);
-		}
-	}
+    @SubscribeEvent
+    public static void onItemUse(LivingEntityUseItemEvent.Start event) {
+        EffectInstance instance = event.getEntityLiving().getActivePotionEffect(ModEffects.FOOD_INDIGESTION);
+        if (event.getEntityLiving() instanceof PlayerEntity) {
+            SCMPlayer player = SCMPlayer.of((PlayerEntity) event.getEntityLiving());
+            ItemStack stack = event.getItem();
+            if (instance != null) {
+                if (stack.getItem().isFood()) {
+                    switch (player.getConversion()) {
+                        case HUMAN:
+                            break;
+                        case WEREWOLF:
+                            if (stack.getItem().getFood().isMeat()) {
+                                break;
+                            }
+                        case VAMPIRE:
+                            event.setCanceled(true);
+                            break;
+                    }
+                }
+            }
+        }
+    }
 
-	@SubscribeEvent
-	public static void playerBreakSpeed(PlayerEvent.BreakSpeed e) {
-		if (e.getEntityLiving() instanceof EntityPlayer) {
-			IPlayerDataCapability playerData = e.getEntityPlayer().getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
+    @SubscribeEvent
+    public static void playerBreakSpeed(PlayerEvent.BreakSpeed e) {
+        if (e.getEntityLiving() instanceof PlayerEntity) {
+            SCMPlayer playerData = SCMPlayer.of(e.getPlayer());
 
-			CreatureType type = playerData.getCreatureType();
+            CreatureType type = playerData.getCreatureType();
 
-			if (type.getBehaviour().shouldApplyBuf(BufType.DIG_SPEED_BOOST, e.getEntityPlayer(), playerData, type))
-				e.setNewSpeed(e.getOriginalSpeed() + playerData.getCreatureType().baseDigSpeed * type.getBehaviour().getMultiplierForBuf(BufType.DIG_SPEED_BOOST, e.getEntityPlayer(), playerData, playerData.getLevel()));
-		}
-	}
+            if (type.getBehaviour().shouldApplyBuff(BuffType.BREAK_SPEED, playerData, type))
+                e.setNewSpeed((float) (e.getOriginalSpeed() + type.getBehaviour().getBuff(BuffType.BREAK_SPEED, playerData)));
+        }
+    }
 
-	@SubscribeEvent
-	public static void onHurt(LivingHurtEvent e) {
-		IPlayerDataCapability attackerData = null;
-		IPlayerDataCapability victimData = null;
+    @SubscribeEvent
+    public static void onHurt(LivingHurtEvent e) {
+        SCMPlayer attackerData = null;
+        SCMPlayer victimData = null;
 
-		if (e.getSource().getSourceOfDamage() instanceof EntityPlayer) {
-			EntityPlayer player = (EntityPlayer) e.getSource().getSourceOfDamage();
+        if (e.getSource().getTrueSource() instanceof PlayerEntity) {
+            PlayerEntity player = (PlayerEntity) e.getSource().getTrueSource();
 
-			attackerData = player.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
-			CreatureType type = attackerData.getCreatureType();
+            attackerData = SCMPlayer.of(player);
+            //CreatureType type = attackerData.getCreatureType();
 
-			if (type.getBehaviour().shouldApplyBuf(BufType.STRENGTH_BOOST, player, attackerData, type))
-				e.setAmount(e.getAmount() + type.baseStrength * type.getBehaviour().getMultiplierForBuf(BufType.STRENGTH_BOOST, player, attackerData, attackerData.getLevel()));
+            //if (type.getBehaviour().shouldApplyBuff(BuffType.ATTACK_DAMAGE, player, attackerData, type))
+            //	e.setAmount(e.getAmount() + type.baseStrength * type.getBehaviour().getMultiplierForBuf(BuffType.ATTACK_DAMAGE, player, attackerData, attackerData.getLevel()));
 
-			for (Skill skill : attackerData.getHighestLevelSkills(false)) {
-				skill.onPlayerAttack(e, player, attackerData, e.getEntityLiving());
-			}
-		}
-		if (e.getEntityLiving() instanceof EntityPlayer) {
-			EntityPlayer player = (EntityPlayer) e.getEntityLiving();
+//			for (Skill skill : attackerData.getHighestLevelSkills(false)) {
+//				skill.onPlayerAttack(e, player, attackerData, e.getEntityLiving());
+//			}
+        }
+        if (e.getEntityLiving() instanceof PlayerEntity) {
+            PlayerEntity player = (PlayerEntity) e.getEntityLiving();
 
-			victimData = player.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
+            victimData = SCMPlayer.of(player);
+            CreatureType type = victimData.getCreatureType();
 
-			CreatureType type = victimData.getCreatureType();
+            if (type.getBehaviour().shouldApplyBuff(BuffType.DAMAGE_RESISTANCE, victimData, type)) {
+                //TODO Damage Resistance
+            }
 
-			if (type.getBehaviour().shouldApplyBuf(BufType.RESISTANCE, player, victimData, type)) {
-				switch (type.getBehaviour().getResistanceLevel(e.getSource())) {
-					case NONE:
-						break;
-					case RESISTANT:
-						e.setAmount(e.getAmount() - type.baseResistance * type.getBehaviour().getMultiplierForBuf(BufType.RESISTANCE, player, victimData, victimData.getLevel()));
-						break;
-					case INVULNERABLE:
-						e.setCanceled(true);
-						break;
-				}
-			}
-			switch (type.getBehaviour().getResistanceLevel(e.getSource())) {
-				case INSTANT_DEATH:
-					e.setAmount(Integer.MAX_VALUE);
-					break;
-				case WEAKNESS:
-					type.getBehaviour().applyWeakness(e, victimData, type, player);
-					break;
-			}
+            if (e.getSource() == DamageSource.FALL) {
+                if (type.getBehaviour().shouldApplyBuff(BuffType.FALL_DISTANCE, victimData, type))
+                    e.setAmount((float) (e.getAmount() - type.getBehaviour().getBuff(BuffType.FALL_DISTANCE, victimData) * 2));
+            }
 
-			if (e.getSource() == DamageSource.fall) {
-				if (type.getBehaviour().shouldApplyBuf(BufType.FALL_DISTANCE, player, victimData, type))
-					e.setAmount(e.getAmount() - type.baseFallDistance * type.getBehaviour().getMultiplierForBuf(BufType.FALL_DISTANCE, player, victimData, victimData.getLevel()) * 2);
-			}
+//			for (Skill skill : victimData.getHighestLevelSkills(false)) {
+//				skill.onPlayerHurt(e, (LivingEntity) e.getSource().getTrueSource(), player, victimData);
+//			}
+        }
+//		if (e.getSource().getTrueSource() instanceof PlayerEntity && e.getEntityLiving() instanceof PlayerEntity) {
+//			PlayerEntity attacker = (PlayerEntity) e.getSource().getTrueSource();
+//			PlayerEntity victim = (PlayerEntity) e.getEntityLiving();
+//
+//			for (Skill skill : attackerData.getHighestLevelSkills(false)) {
+//				skill.onPlayerHurt(e, (LivingEntity) e.getSource().getTrueSource(), attacker, attackerData);
+//			}
+//
+//			for (Skill skill : victimData.getHighestLevelSkills(false)) {
+//				skill.onPlayerHurt(e, (LivingEntity) e.getSource().getTrueSource(), victim, victimData);
+//			}
+//		}
+    }
 
-			for (Skill skill : victimData.getHighestLevelSkills(false)) {
-				skill.onPlayerHurt(e, (EntityLivingBase) e.getSource().getSourceOfDamage(), player, victimData);
-			}
-		}
-		if (e.getSource().getSourceOfDamage() instanceof EntityPlayer && e.getEntityLiving() instanceof EntityPlayer) {
-			EntityPlayer attacker = (EntityPlayer) e.getSource().getSourceOfDamage();
-			EntityPlayer victim = (EntityPlayer) e.getEntityLiving();
+    @SubscribeEvent
+    public static void onJump(LivingEvent.LivingJumpEvent e) {
+        if (e.getEntityLiving() instanceof PlayerEntity) {
+            PlayerEntity player = (PlayerEntity) e.getEntityLiving();
 
-			for (Skill skill : attackerData.getHighestLevelSkills(false)) {
-				skill.onPlayerHurt(e, (EntityLivingBase) e.getSource().getSourceOfDamage(), attacker, attackerData);
-			}
+            SCMPlayer playerData = SCMPlayer.of(player);
 
+            CreatureType type = playerData.getCreatureType();
 
-			for (Skill skill : victimData.getHighestLevelSkills(false)) {
-				skill.onPlayerHurt(e, (EntityLivingBase) e.getSource().getSourceOfDamage(), victim, victimData);
-			}
-		}
-	}
+            if (type.getBehaviour().shouldApplyBuff(BuffType.JUMP_HEIGHT, playerData, type))
+                player.addVelocity(0, (type.getBehaviour().getBuff(BuffType.JUMP_HEIGHT, playerData) + 0.5f) * 0.1F, 0);
+        }
+    }
 
-	@SubscribeEvent
-	public static void onJump(LivingEvent.LivingJumpEvent e) {
-		if (e.getEntityLiving() instanceof EntityPlayer) {
-			EntityPlayer player = (EntityPlayer) e.getEntityLiving();
+    @SubscribeEvent
+    public static void onPlayerRespawn(PlayerEvent.Clone e) {
+        SCMPlayer oldPlayer = SCMPlayer.of(e.getOriginal());
+        SCMPlayer newPlayer = SCMPlayer.of(e.getPlayer());
 
-			IPlayerDataCapability playerData = player.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
+        oldPlayer.cloneTo(newPlayer);
+    }
 
-			CreatureType type = playerData.getCreatureType();
+    @SubscribeEvent
+    public static void onLivingDeath(LivingDeathEvent e) {
+        if (e.getEntityLiving() instanceof PlayerEntity) {
+            PlayerEntity player = (PlayerEntity) e.getEntityLiving();
+            SCMPlayer playerData = SCMPlayer.of(player);
 
-			if (type.getBehaviour().shouldApplyBuf(BufType.JUMP_BOOST, player, playerData, type))
-				if (type.baseJumpHeight > 0)
-					player.addVelocity(0, (type.baseJumpHeight * type.getBehaviour().getMultiplierForBuf(BufType.JUMP_BOOST, player, playerData, playerData.getLevel()) + 0.5f) * 0.1F, 0);
-			//player.jump(); // Never ever uncomment this
-		}
-	}
+            if (playerData.getConversion() == CreatureType.VAMPIRE) {
+                if (!e.getSource().isFireDamage()) {
+                    e.setCanceled(true);
+                    player.setHealth(player.getMaxHealth());
 
-	@SubscribeEvent
-	public static void onPlayerRespawn(PlayerEvent.Clone e) {
-		EntityPlayer newPlayer = e.getEntityPlayer();
-		EntityPlayer oldPlayer = e.getOriginal();
+                    if (!e.getEntityLiving().getEntityWorld().isRemote) {
+                        ITextComponent msg = e.getSource().getDeathMessage(e.getEntityLiving());
+                        e.getEntityLiving().getServer().getPlayerList().sendMessage(msg);
 
+                        //((PlayerEntity) e.getEntityLiving()).sendStatusMessage(new StringTextComponent("You have arisen as a vampire!").applyTextStyles(TextFormatting.RED, TextFormatting.ITALIC), false);
 
-		IPlayerDataCapability newPlayerData = newPlayer.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
-		IPlayerDataCapability oldPlayerData = oldPlayer.getCapability(ModCapabilities.PLAYER_DATA_CAPABILITY, null);
+                        if (e.getEntityLiving().getServer().getPlayerList().getCurrentPlayerCount() == 1) {
+                            long time = e.getEntityLiving().getEntityWorld().getDayTime();
 
-		oldPlayerData.cloneTo(newPlayerData);
-	}
+                            e.getEntityLiving().getEntityWorld().setDayTime(time + Utils.timeUntilNextFullMoon(time));
+                        }
+                    }
 
-	public static void addPotion(EntityLivingBase e, Potion potion, int duration, int amplifier, boolean ambient, boolean showParticles) {
-		if (!e.isPotionActive(potion))
-			e.addPotionEffect(new PotionEffect(potion, duration, amplifier, ambient, showParticles));
-	}
+                    ConvertManager.endInfection(player, true);
+                } else {
+                    ConvertManager.endInfection(player, false);
+                }
+            }
 
-	public static void curePotion(EntityLivingBase e, Potion potion) {
-		if (e.isPotionActive(potion)) {
-			e.removePotionEffect(potion);
+        }
+    }
 
-			try {
-				Class<? extends EntityLivingBase> entityClass = e.getClass();
-				Field f = Utils.getField(entityClass, "potionsNeedUpdate");
-				f.setAccessible(true);
-				f.set(e, true);
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
-			e.onEntityUpdate();
-		}
-	}
+    public static void addPotion(LivingEntity e, Effect potion, int duration, int amplifier, boolean ambient, boolean showParticles) {
+        if (!e.isPotionActive(potion))
+            e.addPotionEffect(new EffectInstance(potion, duration, amplifier, ambient, showParticles));
+    }
+
+    public static void curePotion(LivingEntity e, Effect potion) {
+        if (e.isPotionActive(potion)) {
+            e.removePotionEffect(potion);
+
+//			try {
+//				Class<? extends LivingEntity> entityClass = e.getClass();
+//				Field f = Utils.getField(entityClass, "potionsNeedUpdate");
+//				f.setAccessible(true);
+//				f.set(e, true);
+//			} catch (Exception e1) {
+//				e1.printStackTrace();
+//			}
+            //e.tick();
+        }
+    }
 }
