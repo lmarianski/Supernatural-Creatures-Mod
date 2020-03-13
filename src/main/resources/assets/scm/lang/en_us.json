@@ -26,5 +26,7 @@
 
   "effect.wakefulness.bed": "You can't fall asleep",
 
-  "key.scm.vampire_bite": "Vampire bite"
+  "key.scm.vampire_bite": "Vampire bite",
+
+  "item.scm.silver_ingot": "Silver Ingot"
 }

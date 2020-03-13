@@ -1,7 +1,7 @@
 package io.github.lukas2005.supernaturalcreatures.player;
 
 import io.github.lukas2005.supernaturalcreatures.AttributeModifier;
-import io.github.lukas2005.supernaturalcreatures.Reference;
+import io.github.lukas2005.supernaturalcreatures.Main;
 import io.github.lukas2005.supernaturalcreatures.network.CapabilitySyncMessage;
 import io.github.lukas2005.supernaturalcreatures.network.ISyncable;
 import io.github.lukas2005.supernaturalcreatures.network.NetworkManager;
@@ -24,7 +24,7 @@ public class SCMPlayer implements IPlayerData, ISyncable {
 
     @CapabilityInject(IPlayerData.class)
     public static final Capability<IPlayerData> CAP = null;
-    public static final ResourceLocation CAP_KEY = new ResourceLocation(Reference.MOD_ID, "player_data");
+    public static final ResourceLocation CAP_KEY = new ResourceLocation(Main.MOD_ID, "player_data");
 
     public PlayerEntity entity;
 

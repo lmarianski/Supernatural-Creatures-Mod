@@ -3,13 +3,28 @@ package io.github.lukas2005.supernaturalcreatures.render;
 import com.mojang.blaze3d.platform.GLX;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.debug.DebugRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.LivingRenderer;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.entity.model.RendererModel;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+
+import java.awt.*;
 
 public class RenderUtil {
+
+	private static final Minecraft mc = Minecraft.getInstance();
 
 	/**
 	 * Render the given model part using the given texture with a glowing lightmap (like vanilla spider)
@@ -37,7 +52,7 @@ public class RenderUtil {
 		endGlowing(entity.getBrightnessForRender());
 	}
 
-	private static void startGlowing(boolean entityInvisible, float brightness){
+	public static void startGlowing(boolean entityInvisible, float brightness){
 		GlStateManager.enableBlend();
 		GlStateManager.enableAlphaTest();
 		GlStateManager.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE);
@@ -57,7 +72,7 @@ public class RenderUtil {
 		Minecraft.getInstance().gameRenderer.setupFogColor(true);
 	}
 
-	private static void endGlowing(int brightnessForRender){
+	public static void endGlowing(int brightnessForRender){
 		Minecraft.getInstance().gameRenderer.setupFogColor(true);
 		int i = brightnessForRender;
 		int j = i % 65536;
@@ -66,5 +81,76 @@ public class RenderUtil {
 		GlStateManager.disableBlend();
 	}
 
+	public static void renderBox(BlockPos pos1, BlockPos pos2, double partialTicks, Color color, String text) {
+
+		//Get player's actual position
+		PlayerEntity player = mc.player;
+		double x = player.prevPosX + (player.posX - player.prevPosX) * partialTicks;
+		double y = player.prevPosY + (player.posY - player.prevPosY) * partialTicks;
+		double z = player.prevPosZ + (player.posZ - player.prevPosZ) * partialTicks;
+
+		//Render the box
+		GlStateManager.pushMatrix();
+		GlStateManager.enableAlphaTest();
+		GlStateManager.enableBlend();
+		GlStateManager.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+		GlStateManager.lineWidth(5f);
+		GlStateManager.disableTexture();
+		GlStateManager.disableLighting();
+		GlStateManager.translated(-x, -y, -z);
+		float[] rgb = color.getRGBColorComponents(null);
+		AxisAlignedBB box = new AxisAlignedBB(pos1, pos2.add(1, 1, 1)).grow(0.001d);
+		GlStateManager.enableDepthTest();
+		DebugRenderer.func_217730_a(box, rgb[0], rgb[1], rgb[2], 0.2f);
+		GlStateManager.disableDepthTest();
+		WorldRenderer.drawSelectionBoundingBox(box, rgb[0], rgb[1], rgb[2], 0.4f);
+		Vec3d playerPos = player.getEyePosition((float) partialTicks);
+		Vec3d nameRenderPos = box.getCenter();
+
+		if (playerPos.y < box.minY + 0.5d) {
+			nameRenderPos = new Vec3d(nameRenderPos.x, box.minY + 0.5d, nameRenderPos.z);
+		} else if(playerPos.y > box.maxY - 0.5d) {
+			nameRenderPos = new Vec3d(nameRenderPos.x, box.maxY - 0.5d, nameRenderPos.z);
+		} else {
+			nameRenderPos = new Vec3d(nameRenderPos.x, playerPos.y, nameRenderPos.z);
+		}
+
+		if (text != null && !text.isEmpty()) renderText(text, nameRenderPos);
+		GlStateManager.enableTexture();
+		GlStateManager.enableLighting();
+		GlStateManager.enableDepthTest();
+		GlStateManager.popMatrix();
+	}
+
+	//Copied a lot of this from EntityRenderer#drawNameplate and changed for my needs
+	public static void renderText(String text, Vec3d center) {
+		EntityRendererManager rm = mc.getRenderManager();
+		float viewerYaw = rm.playerViewY;
+		float viewerPitch = rm.playerViewX;
+		boolean isThirdPersonFrontal = rm.options.thirdPersonView == 2;
+
+		GlStateManager.translated(center.x, center.y, center.z);
+		GlStateManager.normal3f(0.0F, 1.0F, 0.0F);
+		GlStateManager.rotatef(-viewerYaw, 0.0F, 1.0F, 0.0F);
+		GlStateManager.rotatef((float)(isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F);
+		float scale = 0.04f;
+		GlStateManager.scalef(-scale, -scale, scale);
+		GlStateManager.disableTexture();
+
+		FontRenderer fr = mc.fontRenderer;
+
+		int i = fr.getStringWidth(text) / 2;
+		Tessellator tessellator = Tessellator.getInstance();
+		BufferBuilder buffer = tessellator.getBuffer();
+		buffer.begin(7, DefaultVertexFormats.POSITION_COLOR);
+		buffer.pos((double)(-i - 1), -1D, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
+		buffer.pos((double)(-i - 1), 8D, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
+		buffer.pos((double)(i + 1), 8D, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
+		buffer.pos((double)(i + 1), -1D, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
+		tessellator.draw();
+		GlStateManager.enableTexture();
+		fr.drawString(text, -i, 0, -1);
+		GlStateManager.disableBlend();
+	}
 
 }

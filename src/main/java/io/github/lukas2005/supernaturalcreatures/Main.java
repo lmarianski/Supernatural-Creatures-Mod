@@ -25,9 +25,12 @@ import net.minecraftforge.server.command.EnumArgument;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(Reference.MOD_ID)
+@Mod(Main.MOD_ID)
 @Mod.EventBusSubscriber
 public class Main {
+
+    public static final String MOD_ID = "scm";
+    public static final String NAME = "Supernatural Creatures Mod";
 
     public static final Logger LOGGER = LogManager.getLogger();
 
@@ -39,6 +42,7 @@ public class Main {
         eventBus.addListener(this::setup);
         eventBus.addListener(this::setupClient);
         //eventBus.addListener(this::serverStarting);
+
     }
 
     private void setup(FMLCommonSetupEvent e) {
@@ -55,7 +59,7 @@ public class Main {
     @SubscribeEvent
     public static void serverStarting(FMLServerStartingEvent e) {
         e.getCommandDispatcher().register(
-                Commands.literal(Reference.MOD_ID)
+                Commands.literal(Main.MOD_ID)
                         .then(Commands.literal("level").then(Commands.argument("level", IntegerArgumentType.integer(0)).executes((ctx) -> {
                             int level = ctx.getArgument("level", int.class);
                             if (ctx.getSource().assertIsEntity() instanceof PlayerEntity) {

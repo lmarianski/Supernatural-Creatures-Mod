@@ -1,6 +1,5 @@
 package io.github.lukas2005.supernaturalcreatures.network;
 
-import io.github.lukas2005.supernaturalcreatures.Reference;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;

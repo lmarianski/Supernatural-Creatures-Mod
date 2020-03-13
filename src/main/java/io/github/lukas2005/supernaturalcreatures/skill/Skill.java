@@ -1,7 +1,7 @@
 package io.github.lukas2005.supernaturalcreatures.skill;
 
-import io.github.lukas2005.supernaturalcreatures.Reference;
 import io.github.lukas2005.supernaturalcreatures.player.capability.IPlayerData;
+import io.github.lukas2005.supernaturalcreatures.skill.tree.SkillTree;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.LivingEntity;

@@ -1,6 +1,5 @@
 package io.github.lukas2005.supernaturalcreatures.proxy;
 
-import io.github.lukas2005.supernaturalcreatures.Reference;
 import io.github.lukas2005.supernaturalcreatures.entity.EntityVampire;
 import io.github.lukas2005.supernaturalcreatures.entity.EntityWerewolf;
 import io.github.lukas2005.supernaturalcreatures.player.behaviour.VampireBehaviour;

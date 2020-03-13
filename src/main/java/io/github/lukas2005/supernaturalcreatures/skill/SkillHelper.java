@@ -1,5 +1,7 @@
 package io.github.lukas2005.supernaturalcreatures.skill;
 
+import io.github.lukas2005.supernaturalcreatures.skill.tree.SkillTree;
+
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;

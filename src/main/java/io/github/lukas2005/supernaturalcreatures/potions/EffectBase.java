@@ -1,9 +1,7 @@
 package io.github.lukas2005.supernaturalcreatures.potions;
 
-import io.github.lukas2005.supernaturalcreatures.Reference;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectType;
-import net.minecraft.potion.Potion;
 
 public class EffectBase extends Effect {
 

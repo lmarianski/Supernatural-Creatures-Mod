@@ -1,7 +1,7 @@
 package io.github.lukas2005.supernaturalcreatures.world;
 
 import io.github.lukas2005.supernaturalcreatures.ModCapabilities;
-import io.github.lukas2005.supernaturalcreatures.Reference;
+import io.github.lukas2005.supernaturalcreatures.entity.ModEntities;
 import io.github.lukas2005.supernaturalcreatures.network.CapabilitySyncMessage;
 import io.github.lukas2005.supernaturalcreatures.network.ISyncable;
 import io.github.lukas2005.supernaturalcreatures.network.NetworkManager;
@@ -10,6 +10,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.capabilities.*;
 import net.minecraftforge.common.util.LazyOptional;
@@ -18,6 +19,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 public class PackHandler implements IPackHandler, ISyncable {
 
@@ -30,6 +32,12 @@ public class PackHandler implements IPackHandler, ISyncable {
     public HashMap<ChunkPos, Pack> packChunks = new HashMap<>();
     public ArrayList<Pack> allPacks = new ArrayList<>();
 
+    public ArrayList<ChunkPos> closed = new ArrayList<>();
+
+    private volatile LinkedList<Chunk> chunkQueue = new LinkedList<>();
+
+    private boolean isActive = false;
+    private volatile Thread thread;
 
     public PackHandler(World world) {
         this.world = world;
@@ -118,14 +126,25 @@ public class PackHandler implements IPackHandler, ISyncable {
 
     @Override
     public boolean isAllFree(ChunkPos[] poss) {
-        boolean flag = true;
         for (ChunkPos pos : poss) {
             if (isOccupied(pos)) {
-                flag = false;
-                break;
+                return false;
             }
         }
-        return flag;
+        return true;
+    }
+
+    @Override
+    public boolean isRadiusClear(ChunkPos center, int r) {
+        for (int x = center.x-r; x <= center.x+r; x++) {
+            for (int z = center.z-r; z <= center.z+r; z++) {
+                if (isOccupied(new ChunkPos(x,z))) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     @Override
@@ -144,4 +163,80 @@ public class PackHandler implements IPackHandler, ISyncable {
     public int getEntityID() {
         return world.getDimension().getType().getId();
     }
+
+    public void enqueue(Chunk chunk) {
+        chunkQueue.add(chunk);
+        if (!isActive) {
+            thread = new Thread(this::doNext);
+            thread.start();
+            isActive = true;
+        }
+    }
+
+    private void doNext() {
+        Chunk chunk = chunkQueue.poll();
+
+        ChunkPos pos = chunk.getPos();
+
+        ChunkPos[] arr = {
+                new ChunkPos(pos.x + 1, pos.z),
+                new ChunkPos(pos.x - 1, pos.z),
+                new ChunkPos(pos.x, pos.z + 1),
+                new ChunkPos(pos.x, pos.z - 1),
+                new ChunkPos(pos.x + 1, pos.z + 1),
+                new ChunkPos(pos.x - 1, pos.z - 1),
+                new ChunkPos(pos.x + 1, pos.z - 1),
+                new ChunkPos(pos.x - 1, pos.z + 1),
+        };
+
+        if (world != null && !world.isRemote() && world.getDimension().isSurfaceWorld()) {
+            PackHandler handler = PackHandler.forWorld(world);
+
+            boolean flag = false;
+
+            for (Biome b : chunk.getBiomes()) {
+                if (ModEntities.wolfBiomes.contains(b)) {
+                    flag = true;
+                    break;
+                }
+            }
+
+            if (!handler.closed.contains(pos) && flag) {
+                if (!handler.isOccupied(pos)) {
+                    if (handler.isRadiusClear(pos, 10)) {
+                        if (world.getRandom().nextFloat() >= 0.99) {
+                            handler.newPack(chunk);
+                        }
+                    } else {
+                        Pack pack = null;
+
+                        if (handler.isOccupied(arr[0])) {
+                            pack = handler.getPackAt(arr[0]);
+                        } else if (handler.isOccupied(arr[1])) {
+                            pack = handler.getPackAt(arr[1]);
+                        } else if (handler.isOccupied(arr[2])) {
+                            pack = handler.getPackAt(arr[2]);
+                        } else if (handler.isOccupied(arr[3])) {
+                            pack = handler.getPackAt(arr[3]);
+                        }
+
+                        if (pack != null) {
+                            handler.growPack(pack, chunk);
+                        }
+                    }
+                }
+                handler.closed.add(pos);
+                handler.sync();
+            }
+        }
+
+        if (chunkQueue.peek() != null) {
+            doNext();
+        } else {
+            isActive = false;
+            thread = null;
+            Thread.currentThread().interrupt();
+        }
+    }
+
 }

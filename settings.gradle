@@ -1,0 +1,5 @@
+include 'src:api'
+findProject(':src:api')?.name = 'api'
+include 'api'
+include 'api'
+

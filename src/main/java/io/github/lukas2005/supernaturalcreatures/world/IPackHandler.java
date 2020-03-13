@@ -36,6 +36,8 @@ public interface IPackHandler {
 
     boolean isAllFree(ChunkPos[] poss);
 
+    boolean isRadiusClear(ChunkPos center, int r);
+
     void sync();
 
     class Storage implements Capability.IStorage<IPackHandler> {
@@ -61,6 +63,15 @@ public interface IPackHandler {
             }
             nbt.put("packChunks", packChunks);
 
+            ListNBT closedChunks = new ListNBT();
+            for (ChunkPos pos : ((PackHandler)instance).closed) {
+                CompoundNBT entryNBT = new CompoundNBT();
+                entryNBT.putInt("chunkX", pos.x);
+                entryNBT.putInt("chunkZ", pos.z);
+                closedChunks.add(entryNBT);
+            }
+            nbt.put("closedChunks", closedChunks);
+
             return nbt;
         }
 
@@ -76,7 +87,6 @@ public interface IPackHandler {
                 CompoundNBT chunkNBT = (CompoundNBT) inbt;
 
                 ChunkPos pos = new ChunkPos(chunkNBT.getInt("chunkX"), chunkNBT.getInt("chunkZ"));
-
                 UUID id = chunkNBT.getUniqueId("packId");
 
                 AtomicReference<Pack> pack = new AtomicReference<>();
@@ -90,6 +100,13 @@ public interface IPackHandler {
                 if (pack.get() != null) {
                     instance.getPackChunks().put(pos, pack.get());
                 }
+            }
+
+            for (INBT inbt : nbt.getList("closedChunks", Constants.NBT.TAG_COMPOUND)) {
+                CompoundNBT chunkNBT = (CompoundNBT) inbt;
+
+                ChunkPos pos = new ChunkPos(chunkNBT.getInt("chunkX"), chunkNBT.getInt("chunkZ"));
+                ((PackHandler)instance).closed.add(pos);
             }
         }
 
@@ -140,6 +157,11 @@ public interface IPackHandler {
 
         @Override
         public boolean isAllFree(ChunkPos[] poss) {
+            return false;
+        }
+
+        @Override
+        public boolean isRadiusClear(ChunkPos center, int r) {
             return false;
         }
 

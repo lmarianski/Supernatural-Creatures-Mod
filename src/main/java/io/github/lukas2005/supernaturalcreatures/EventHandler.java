@@ -50,58 +50,68 @@ public class EventHandler {
 
     @SubscribeEvent
     public static void onChunkLoad(ChunkEvent.Load e) {
-        World world = (World) e.getWorld();
-        ChunkPos pos = e.getChunk().getPos();
+        if (e.getWorld() != null && !e.getWorld().isRemote()) {
+            PackHandler handler = PackHandler.forWorld((World) e.getWorld());
 
-        ChunkPos[] arr = {
-                new ChunkPos(pos.x + 1, pos.z),
-                new ChunkPos(pos.x - 1, pos.z),
-                new ChunkPos(pos.x, pos.z + 1),
-                new ChunkPos(pos.x, pos.z - 1),
-                new ChunkPos(pos.x + 1, pos.z + 1),
-                new ChunkPos(pos.x - 1, pos.z - 1),
-                new ChunkPos(pos.x + 1, pos.z - 1),
-                new ChunkPos(pos.x - 1, pos.z + 1),
-        };
-
-        if (world != null && !world.isRemote() && world.getDimension().isSurfaceWorld()) {
-            PackHandler handler = PackHandler.forWorld(world);
-
-            if (!handler.isOccupied(pos)) {
-                if (handler.isAllFree(arr)) {
-					boolean flag = false;
-
-					for (Biome b : e.getChunk().getBiomes()) {
-						if (ModEntities.wolfBiomes.contains(b)) {
-							flag = true;
-							break;
-						}
-					}
-
-					if (flag && world.getRandom().nextFloat() >= 0.99) {
-						handler.newPack((Chunk) e.getChunk());
-                        handler.sync();
-					}
-                } else {
-                	Pack pack = null;
-
-                	if (handler.isOccupied(arr[0])) {
-                		pack = handler.getPackAt(arr[0]);
-					} else if (handler.isOccupied(arr[1])) {
-						pack = handler.getPackAt(arr[1]);
-					} else if (handler.isOccupied(arr[2])) {
-						pack = handler.getPackAt(arr[2]);
-					} else if (handler.isOccupied(arr[3])) {
-						pack = handler.getPackAt(arr[3]);
-					}
-
-                	if (pack != null) {
-						handler.growPack(pack, (Chunk) e.getChunk());
-                        handler.sync();
-					}
-				}
+            if (!handler.closed.contains(e.getChunk().getPos())) {
+                handler.enqueue((Chunk) e.getChunk());
             }
         }
+
+//        World world = (World) e.getWorld();
+//        ChunkPos pos = e.getChunk().getPos();
+//
+//        ChunkPos[] arr = {
+//                new ChunkPos(pos.x + 1, pos.z),
+//                new ChunkPos(pos.x - 1, pos.z),
+//                new ChunkPos(pos.x, pos.z + 1),
+//                new ChunkPos(pos.x, pos.z - 1),
+//                new ChunkPos(pos.x + 1, pos.z + 1),
+//                new ChunkPos(pos.x - 1, pos.z - 1),
+//                new ChunkPos(pos.x + 1, pos.z - 1),
+//                new ChunkPos(pos.x - 1, pos.z + 1),
+//        };
+//
+//        if (world != null && !world.isRemote() && world.getDimension().isSurfaceWorld()) {
+//            PackHandler handler = PackHandler.forWorld(world);
+//
+//            boolean flag = false;
+//
+//            for (Biome b : e.getChunk().getBiomes()) {
+//                if (ModEntities.wolfBiomes.contains(b)) {
+//                    flag = true;
+//                    break;
+//                }
+//            }
+//
+//            if (!handler.closed.contains(pos) && flag) {
+//                if (!handler.isOccupied(pos)) {
+//                    if (handler.isRadiusClear(pos, 10)) {
+//                        if (world.getRandom().nextFloat() >= 0.99) {
+//                            handler.newPack((Chunk) e.getChunk());
+//                        }
+//                    } else {
+//                        Pack pack = null;
+//
+//                        if (handler.isOccupied(arr[0])) {
+//                            pack = handler.getPackAt(arr[0]);
+//                        } else if (handler.isOccupied(arr[1])) {
+//                            pack = handler.getPackAt(arr[1]);
+//                        } else if (handler.isOccupied(arr[2])) {
+//                            pack = handler.getPackAt(arr[2]);
+//                        } else if (handler.isOccupied(arr[3])) {
+//                            pack = handler.getPackAt(arr[3]);
+//                        }
+//
+//                        if (pack != null) {
+//                            handler.growPack(pack, (Chunk) e.getChunk());
+//                        }
+//                    }
+//                }
+//                handler.closed.add(pos);
+//                handler.sync();
+//            }
+//        }
     }
 
     @SubscribeEvent

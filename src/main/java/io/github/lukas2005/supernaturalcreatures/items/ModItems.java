@@ -1,47 +1,40 @@
 package io.github.lukas2005.supernaturalcreatures.items;
 
-import io.github.lukas2005.supernaturalcreatures.IHasModel;
-import io.github.lukas2005.supernaturalcreatures.Reference;
+import io.github.lukas2005.supernaturalcreatures.Main;
 import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.item.Item.Properties;
+import net.minecraft.item.ItemGroup;
 import net.minecraftforge.client.event.ModelRegistryEvent;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 
 @Mod.EventBusSubscriber(bus=Mod.EventBusSubscriber.Bus.MOD)
 public class ModItems {
 
+	protected static final DeferredRegister<Item> ITEMS = new DeferredRegister<>(ForgeRegistries.ITEMS, Main.MOD_ID);
+
 	private static ArrayList<Item> items = new ArrayList<>();
 
-	public static void initItems() {
-		initHelper(new VampireTestItem(), "vamp_test");
-	}
+	public static final VampireTestItem VAMP_TEST = ITEMS.register("vamp_test", VampireTestItem::new).get();
 
-	@SubscribeEvent
-	public static void registerItems(RegistryEvent.Register<Item> e) {
-		initItems();
-		e.getRegistry().registerAll(items.toArray(new Item[]{}));
+	public static final Item SILVER_INGOT  = ITEMS.register("vamp_test", () -> new Item(new Properties().group(ItemGroup.MATERIALS))).get();
+	public static final Item SILVER_NUGGET = ITEMS.register("vamp_test", () -> new Item(new Properties().group(ItemGroup.MATERIALS))).get();
+
+	public static void initItems() {
 	}
 
 	@SubscribeEvent
 	public static void onRegsterItemModels(ModelRegistryEvent e) {
-		for (Item item : items) {
-			if (item instanceof IHasModel) {
-				((IHasModel) item).registerModels();
-			} else {
-				//Main.proxy.registerItemModel(item, 0, "inventory");
-			}
-		}
-	}
-
-	public static Item initHelper(Item item, String name) {
-		items.add(item
-				//.setUnlocalizedName(Reference.MOD_ID+"."+name)
-				.setRegistryName(new ResourceLocation(Reference.MOD_ID, name))
-		);
-		return item;
+//		for (Item item : items) {
+//			if (item instanceof IHasModel) {
+//				((IHasModel) item).registerModels();
+//			} else {
+//				//Main.proxy.registerItemModel(item, 0, "inventory");
+//			}
+//		}
 	}
 }

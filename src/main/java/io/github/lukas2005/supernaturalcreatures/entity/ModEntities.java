@@ -1,6 +1,5 @@
 package io.github.lukas2005.supernaturalcreatures.entity;
 
-import io.github.lukas2005.supernaturalcreatures.Reference;
 import net.minecraft.entity.*;
 import net.minecraft.item.Item;
 import net.minecraft.item.SpawnEggItem;
@@ -15,7 +14,6 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.ObjectHolder;
 
 import java.awt.*;
 import java.util.ArrayList;
