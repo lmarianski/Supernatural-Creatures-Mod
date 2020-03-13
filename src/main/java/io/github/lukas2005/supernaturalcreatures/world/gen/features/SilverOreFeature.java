@@ -15,6 +15,6 @@ import java.util.function.Function;
 
 public class SilverOreFeature extends OreFeature {
     public SilverOreFeature() {
-        super(val -> new OreFeatureConfig(OreFeatureConfig.FillerBlockType.NATURAL_STONE, ModBlocks.SILVER_ORE.getDefaultState(), 3));
+        super(val -> new OreFeatureConfig(OreFeatureConfig.FillerBlockType.NATURAL_STONE, ModBlocks.SILVER_ORE.get().getDefaultState(), 3));
     }
 }

@@ -1,24 +1,32 @@
 package io.github.lukas2005.supernaturalcreatures.entity;
 
+import io.github.lukas2005.supernaturalcreatures.Reference;
+import io.github.lukas2005.supernaturalcreatures.items.ModItems;
 import net.minecraft.entity.*;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.SpawnEggItem;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.LightType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 //@ObjectHolder(Reference.MOD_ID)
@@ -26,17 +34,10 @@ public class ModEntities {
 
     private static int id = -1;
 
-    private static ArrayList<EntityType> entities = new ArrayList<>();
-    private static ArrayList<Item> spawnEggs = new ArrayList<>();
+    public static final DeferredRegister<EntityType<?>> ENTITIES = new DeferredRegister<>(ForgeRegistries.ENTITIES, Reference.MOD_ID);
 
-    public static final EntityType<EntityVampire> VAMPIRE = register("vampire", EntityType.Builder.create(EntityVampire::new, EntityClassification.MONSTER)
-                    .size(0.6F, 1.95F)
-                    .setTrackingRange(10)
-                    .setUpdateInterval(3),
-            new Color(255, 0, 0).getRGB(), new Color(0, 0, 0).getRGB()
-    );
-
-    public static final EntityType<EntityWerewolf> WEREWOLF = register("werewolf", EntityType.Builder.create(EntityWerewolf::new, EntityClassification.MONSTER)
+    public static final RegistryObject<EntityType<EntityWerewolf>> WEREWOLF = register("werewolf",
+            EntityType.Builder.create(EntityWerewolf::new, EntityClassification.MONSTER)
                     .size(0.6F, 1.95F)
                     .setTrackingRange(10)
                     .setUpdateInterval(3),
@@ -61,50 +62,46 @@ public class ModEntities {
             Biomes.GIANT_SPRUCE_TAIGA,
             Biomes.GIANT_SPRUCE_TAIGA_HILLS));
 
-    @SubscribeEvent
+    public static List<Integer> wolfBiomeIds;
+
+    @SubscribeEvent(priority = EventPriority.LOW)
     public static void registerEntities(RegistryEvent.Register<EntityType<?>> e) {
-        e.getRegistry().registerAll(entities.toArray(new EntityType[]{}));
-        entities.clear();
+        addSpawn(WEREWOLF.get(), 6, 2, 5, EntityClassification.MONSTER, wolfBiomes);
 
-        addSpawnExcluding(VAMPIRE, 6, 1, 2, EntityClassification.MONSTER, Biomes.NETHER, Biomes.THE_END, Biomes.THE_VOID);
-        //addSpawnExcluding(WEREWOLF, 6, 1, 5, EntityClassification.MONSTER, Biomes.NETHER, Biomes.THE_END, Biomes.THE_VOID);
-
-        addSpawn(WEREWOLF, 6, 2, 5, EntityClassification.MONSTER, wolfBiomes);
-
-
-        EntitySpawnPlacementRegistry.register(VAMPIRE, EntitySpawnPlacementRegistry.PlacementType.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, EntityVampire::spawnPlacement);
-        EntitySpawnPlacementRegistry.register(WEREWOLF, EntitySpawnPlacementRegistry.PlacementType.ON_GROUND, Heightmap.Type.WORLD_SURFACE, EntityWerewolf::spawnPlacement);
+        EntitySpawnPlacementRegistry.register(WEREWOLF.get(), EntitySpawnPlacementRegistry.PlacementType.ON_GROUND, Heightmap.Type.WORLD_SURFACE, EntityWerewolf::spawnPlacement);
     }
 
-    @SubscribeEvent
-    public static void registerSpawnEggs(RegistryEvent.Register<Item> e) {
-        e.getRegistry().registerAll(spawnEggs.toArray(new Item[]{}));
-        spawnEggs.clear();
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void onBiomeRegister(RegistryEvent.Register<Biome> e) {
+        wolfBiomeIds = wolfBiomes.stream()
+                .map(Registry.BIOME::getId)
+                .collect(Collectors.toList());
     }
 
-    public static <T extends Entity> EntityType<T> register(String key, EntityType.Builder<T> builder, int primaryColor, int secondaryColor) {
+    public static <T extends Entity> RegistryObject<EntityType<T>> register(String key, EntityType.Builder<T> builder, int primaryColor, int secondaryColor) {
         EntityType<T> type = builder.build(key);
-        type.setRegistryName(new ResourceLocation(Reference.MOD_ID, key));
-
-        entities.add(type);
-        spawnEggs.add(new SpawnEggItem(type, primaryColor, secondaryColor, new Item.Properties()).setRegistryName(Reference.MOD_ID, key));
-
-        return type;
+        ModItems.ITEMS.register(
+                key,
+                () -> new SpawnEggItem(type, primaryColor, secondaryColor,
+                        new Item.Properties().group(ItemGroup.MISC)
+                )
+        );
+        return ENTITIES.register(key, () -> type);
     }
 
-    public static void addSpawn(EntityType type, int weightedProb, int min, int max, EntityClassification classification, Biome... biomes) {
+    public static <T extends Entity> void addSpawn(EntityType<T> type, int weightedProb, int min, int max, EntityClassification classification, Biome... biomes) {
         for (Biome biome : biomes) {
             biome.getSpawns(classification).add(new Biome.SpawnListEntry(type, weightedProb, min, max));
         }
     }
 
-    public static void addSpawn(EntityType type, int weightedProb, int min, int max, EntityClassification classification, ArrayList<Biome> biomes) {
+    public static <T extends Entity> void addSpawn(EntityType<T> type, int weightedProb, int min, int max, EntityClassification classification, ArrayList<Biome> biomes) {
         for (Biome biome : biomes) {
             biome.getSpawns(classification).add(new Biome.SpawnListEntry(type, weightedProb, min, max));
         }
     }
 
-    public static void addSpawnExcluding(EntityType type, int weightedProb, int min, int max, EntityClassification classification, Biome... biomesToExclude) {
+    public static <T extends Entity> void addSpawnExcluding(EntityType<T> type, int weightedProb, int min, int max, EntityClassification classification, Biome... biomesToExclude) {
         ArrayList<Biome> biomes = new ArrayList<>(ForgeRegistries.BIOMES.getValues());
         biomes.removeAll(Arrays.asList(biomesToExclude));
         biomes.forEach(biome -> {

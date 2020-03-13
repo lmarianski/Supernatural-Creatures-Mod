@@ -51,6 +51,12 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mollis lacinia magn
 [[dependencies.scm]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.14.4]"
+    versionRange="[1.15.2]"
     ordering="NONE"
+    side="BOTH"
+[[dependencies.scm]]
+    modId="vampirism"
+    mandatory=true
+    versionRange="[1.6.0,)"
+    ordering="BEFORE"
     side="BOTH"

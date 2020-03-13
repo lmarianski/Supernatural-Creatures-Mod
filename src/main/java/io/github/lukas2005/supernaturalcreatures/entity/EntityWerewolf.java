@@ -1,22 +1,20 @@
 package io.github.lukas2005.supernaturalcreatures.entity;
 
-import io.github.lukas2005.supernaturalcreatures.Main;
-import io.github.lukas2005.supernaturalcreatures.player.ConvertManager;
-import io.github.lukas2005.supernaturalcreatures.player.CreatureType;
-import io.github.lukas2005.supernaturalcreatures.player.werewolf.EnumPackRank;
+import de.teamlapen.vampirism.api.entity.factions.IFaction;
+import de.teamlapen.vampirism.entity.vampire.BasicVampireEntity;
+import io.github.lukas2005.supernaturalcreatures.ModFactions;
+import io.github.lukas2005.supernaturalcreatures.api.entity.werewolf.IWerewolfMob;
+import io.github.lukas2005.supernaturalcreatures.enums.EnumPackRank;
+import io.github.lukas2005.supernaturalcreatures.world.Pack;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
 import net.minecraft.entity.monster.MonsterEntity;
-import net.minecraft.entity.monster.ZombieEntity;
-import net.minecraft.entity.monster.ZombiePigmanEntity;
 import net.minecraft.entity.passive.IronGolemEntity;
-import net.minecraft.entity.passive.TurtleEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.pathfinding.GroundPathNavigator;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Difficulty;
@@ -25,7 +23,7 @@ import net.minecraft.world.World;
 
 import java.util.Random;
 
-public class EntityWerewolf extends MonsterEntity implements ICreature {
+public class EntityWerewolf extends MonsterEntity implements IWerewolfMob {
 
     public static final DataParameter<Boolean> IS_TRANSFORMED = EntityDataManager.createKey(EntityWerewolf.class, DataSerializers.BOOLEAN);
     public static final DataParameter<Integer> PACK_RANK = EntityDataManager.createKey(EntityWerewolf.class, DataSerializers.VARINT);
@@ -38,12 +36,6 @@ public class EntityWerewolf extends MonsterEntity implements ICreature {
         return world.getDifficulty() != Difficulty.PEACEFUL && ModEntities.spawnPredicateLight(world, blockPos, random) && ModEntities.spawnPredicateCanSpawn(entityType, world, spawnReason, blockPos, random);
     }
 
-
-    @Override
-    public CreatureType getCreatureType() {
-        return CreatureType.WEREWOLF;
-    }
-
     @Override
     public boolean attackEntityFrom(DamageSource source, float amount) {
         return super.attackEntityFrom(source, amount);
@@ -53,7 +45,7 @@ public class EntityWerewolf extends MonsterEntity implements ICreature {
     public boolean attackEntityAsMob(Entity entityIn) {
 
         if (entityIn instanceof LivingEntity) {
-            ConvertManager.addRandom((LivingEntity) entityIn, CreatureType.WEREWOLF);
+            //ConvertManager.addRandom((LivingEntity) entityIn, CreatureType.WEREWOLF);
         }
 
         return super.attackEntityAsMob(entityIn);
@@ -92,8 +84,33 @@ public class EntityWerewolf extends MonsterEntity implements ICreature {
         this.targetSelector.addGoal(1, (new HurtByTargetGoal(this)).setCallsForHelp(EntityWerewolf.class));
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, PlayerEntity.class, true));
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, EntityWerewolf.class, false));
-        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, EntityVampire.class, false));
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, BasicVampireEntity.class, false));
         this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, AbstractVillagerEntity.class, false));
         this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, IronGolemEntity.class, true));
+    }
+
+    @Override
+    public IFaction getFaction() {
+        return ModFactions.WEREWOLF_FACTION;
+    }
+
+    @Override
+    public LivingEntity getRepresentingEntity() {
+        return this;
+    }
+
+    @Override
+    public Pack getPack() {
+        return null;
+    }
+
+    @Override
+    public EnumPackRank getPackRank() {
+        return EnumPackRank.OMEGA;
+    }
+
+    @Override
+    public boolean isTransformed() {
+        return true;
     }
 }

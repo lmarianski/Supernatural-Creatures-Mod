@@ -5,9 +5,8 @@ import net.minecraft.potion.EffectType;
 
 public class EffectBase extends Effect {
 
-	public EffectBase(String name, EffectType type, int liquidColorIn) {
+	public EffectBase(EffectType type, int liquidColorIn) {
 		super(type, liquidColorIn);
-		setRegistryName(Reference.MOD_ID, name);
 		//setPotionName("effect."+Reference.MOD_ID+"."+name);
 	}
 

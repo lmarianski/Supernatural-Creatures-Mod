@@ -86,11 +86,23 @@ minecraft {
     }
 }
 
+repositories {
+    //Maven repo for Vampirism
+    maven {
+        url = "https://maxanier.de/maven2"
+    }
+}
+
+def mc_version = "1.15.2"
+def vampirism_version = "1.6.0-alpha+20200223-1524"
+
 dependencies {
     // Specify the version of Minecraft to use, If this is any group other then 'net.minecraft' it is assumed
     // that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
     // The userdev artifact is a special name and will get all sorts of transformations applied to it.
     minecraft 'net.minecraftforge:forge:1.15.2-31.1.19'
+
+    implementation fg.deobf("de.teamlapen.vampirism:Vampirism:${mc_version}-${vampirism_version}")
 
     // You may put jars on which you depend on in ./libs or you may define them like so..
     // compile "some.group:artifact:version:classifier"

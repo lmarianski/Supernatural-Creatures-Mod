@@ -1,6 +1,7 @@
 package io.github.lukas2005.supernaturalcreatures.world;
 
 import io.github.lukas2005.supernaturalcreatures.ModCapabilities;
+import io.github.lukas2005.supernaturalcreatures.Reference;
 import io.github.lukas2005.supernaturalcreatures.entity.ModEntities;
 import io.github.lukas2005.supernaturalcreatures.network.CapabilitySyncMessage;
 import io.github.lukas2005.supernaturalcreatures.network.ISyncable;
@@ -10,10 +11,12 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.capabilities.*;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.event.world.ChunkEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nonnull;
@@ -21,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+@Mod.EventBusSubscriber
 public class PackHandler implements IPackHandler, ISyncable {
 
     @CapabilityInject(IPackHandler.class)
@@ -38,10 +42,6 @@ public class PackHandler implements IPackHandler, ISyncable {
 
     private boolean isActive = false;
     private volatile Thread thread;
-
-    public PackHandler(World world) {
-        this.world = world;
-    }
 
     public static PackHandler forWorld(World world) {
         return (PackHandler) world.getCapability(CAP, null).orElseThrow(()->new IllegalStateException("World doesn't have capability!"));
@@ -74,6 +74,21 @@ public class PackHandler implements IPackHandler, ISyncable {
                 return (CompoundNBT) CAP.getStorage().writeNBT(CAP, inst, null);
             }
         };
+    }
+
+    @SubscribeEvent
+    public static void onChunkLoad(ChunkEvent.Load e) {
+//        if (e.getWorld() != null && !e.getWorld().isRemote()) {
+//            PackHandler handler = PackHandler.forWorld((World) e.getWorld());
+//
+//            if (!handler.closed.contains(e.getChunk().getPos())) {
+//                handler.enqueue((Chunk) e.getChunk());
+//            }
+//        }
+    }
+
+    public PackHandler(World world) {
+        this.world = world;
     }
 
     @Override
@@ -194,8 +209,8 @@ public class PackHandler implements IPackHandler, ISyncable {
 
             boolean flag = false;
 
-            for (Biome b : chunk.getBiomes()) {
-                if (ModEntities.wolfBiomes.contains(b)) {
+            for (int b : chunk.getBiomes().getBiomeIds()) {
+                if (ModEntities.wolfBiomeIds.contains(b)) {
                     flag = true;
                     break;
                 }

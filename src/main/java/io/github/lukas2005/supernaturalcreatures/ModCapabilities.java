@@ -1,6 +1,7 @@
 package io.github.lukas2005.supernaturalcreatures;
 
-import io.github.lukas2005.supernaturalcreatures.player.SCMPlayer;
+import de.teamlapen.vampirism.entity.factions.FactionPlayerHandler;
+import io.github.lukas2005.supernaturalcreatures.player.werewolf.WerewolfPlayer;
 import io.github.lukas2005.supernaturalcreatures.world.PackHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -20,14 +21,12 @@ public class ModCapabilities {
 	public static final Map<ResourceLocation, Capability> CAPABILITY_MAP = new HashMap<>();
 
 	public static void register() {
-		SCMPlayer.registerCapability();
 		PackHandler.registerCapability();
 	}
 
 	@SubscribeEvent
 	public static void onAttachEntity(AttachCapabilitiesEvent<Entity> e) {
 		if (e.getObject() instanceof PlayerEntity) {
-			e.addCapability(SCMPlayer.CAP_KEY, SCMPlayer.createNewCapability((PlayerEntity) e.getObject()));
 		}
 	}
 
