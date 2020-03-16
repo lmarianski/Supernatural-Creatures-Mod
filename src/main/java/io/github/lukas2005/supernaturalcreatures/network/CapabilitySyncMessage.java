@@ -1,7 +1,7 @@
 package io.github.lukas2005.supernaturalcreatures.network;
 
+import io.github.lukas2005.supernaturalcreatures.Main;
 import io.github.lukas2005.supernaturalcreatures.ModCapabilities;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
@@ -47,17 +47,14 @@ public class CapabilitySyncMessage implements IMessage {
 
 	public static void handle(CapabilitySyncMessage message, Supplier<NetworkEvent.Context> ctx) {
 		ctx.get().enqueueWork(() -> {
-			World world = Minecraft.getInstance().world;
+			World world = Main.proxy.getNetworkWorld(ctx.get());
 			Capability cap = ModCapabilities.CAPABILITY_MAP.get(new ResourceLocation(message.capKey));
 
-			boolean flag = false;
 			try {
 				ISyncable s = null;
 				switch (message.target) {
-					case PLAYER:
-						flag = true;
 					case ENTITY:
-						Entity e = flag ? Minecraft.getInstance().player : world.getEntityByID(message.entityId);
+						Entity e = world.getEntityByID(message.entityId);
 						s = (ISyncable) e.getCapability(cap).orElseThrow(()->new Exception("Null capability!"));
 						break;
 					case DIMENSION:

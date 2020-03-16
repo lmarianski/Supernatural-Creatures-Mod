@@ -1,13 +1,13 @@
 package io.github.lukas2005.supernaturalcreatures.render.layer;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import io.github.lukas2005.supernaturalcreatures.entity.EntityWerewolf;
+import io.github.lukas2005.supernaturalcreatures.entity.EntityOmegaWerewolf;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.LivingRenderer;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.client.renderer.entity.model.BipedModel;
 
-public class WerewolfEyesLayer<T extends EntityWerewolf, M extends BipedModel<T>> extends LayerRenderer<T, M> {
+public class WerewolfEyesLayer<T extends EntityOmegaWerewolf, M extends BipedModel<T>> extends LayerRenderer<T, M> {
 
     protected LivingRenderer<T, M> renderer;
 

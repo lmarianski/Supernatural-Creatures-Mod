@@ -1,11 +1,14 @@
 package io.github.lukas2005.supernaturalcreatures.render;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GLX;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.LivingRenderer;
 import net.minecraft.client.renderer.entity.model.EntityModel;
@@ -25,64 +28,8 @@ import static org.lwjgl.opengl.GL11.*;
 public class RenderUtil {
 
 	private static final Minecraft mc = Minecraft.getInstance();
-//
-//	/**
-//	 * Render the given model part using the given texture with a glowing lightmap (like vanilla spider)
-//	 *
-//	 * @param brightness Between 0 and 255f
-//	 */
-//	public static <T extends LivingEntity, M extends EntityModel<T>> void renderGlowing(LivingRenderer<T, M> render, ModelRenderer modelPart, ResourceLocation texture, float brightness, T entity, float scale, float partialTicks) {
-//		render.bindTexture(texture);
-//
-//		startGlowing(entity.isInvisible(), brightness);
-//		modelPart.render(scale);
-//		endGlowing(entity.getBrightness());
-//	}
-//
-//	/**
-//	 * Render the complete model using the given texture with a glowing lightmap (like vanilla spider)
-//	 *
-//	 * @param brightness Between 0 and 255f
-//	 */
-//	public static <T extends LivingEntity, M extends EntityModel<T>> void renderGlowing(LivingRenderer<T, M> render, ResourceLocation texture, float brightness, T entity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
-//		render.bindTexture(texture);
-//		render.bindTexture(texture);
-//		startGlowing(entity.isInvisible(), brightness);
-//		render.getEntityModel().render(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
-//		endGlowing(entity.getBrightness());
-//	}
 
-//	public static void startGlowing(boolean entityInvisible, float brightness){
-//		GlStateManager.enableBlend();
-//		GlStateManager.enableAlphaTest();
-//		GlStateManager.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE);
-//
-//		if (entityInvisible) {
-//			GlStateManager.depthMask(false);
-//		} else {
-//			GlStateManager.depthMask(true);
-//		}
-//
-//
-//		float j = brightness % 65536;
-//		float k = brightness / 65536;
-//		GLX.glMultiTexCoord2f(GL_TEXTURE1, j, k);
-//
-//		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-//		Minecraft.getInstance().gameRenderer.setupFogColor(true);
-//	}
-//
-//	public static void endGlowing(float brightnessForRender){
-//		Minecraft.getInstance().gameRenderer.setupFogColor(true);
-//		float i = brightnessForRender;
-//		float j = i % 65536;
-//		float k = i / 65536;
-//		GLX.glMultiTexCoord2f(GL_TEXTURE1, j, k);
-//		GlStateManager.disableBlend();
-//		GL13C.gl
-//	}
-
-	public static void renderBox(BlockPos pos1, BlockPos pos2, double partialTicks, Color color, String text) {
+	public static void renderBox(MatrixStack matrix, BlockPos pos1, BlockPos pos2, double partialTicks, Color color, String text) {
 
 		//Get player's actual position
 		PlayerEntity player = mc.player;
@@ -91,39 +38,41 @@ public class RenderUtil {
 		double z = player.prevPosZ + (player.getPosZ() - player.prevPosZ) * partialTicks;
 
 		//Render the box
-		glPushMatrix();
-		glEnable(GL_ALPHA_TEST);
-		GlStateManager.enableBlend();
-		GlStateManager.blendFuncSeparate(
-				GlStateManager.SourceFactor.SRC_ALPHA.param, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA.param,
-				GlStateManager.SourceFactor.ONE.param, GlStateManager.DestFactor.ZERO.param
-		);
-		GlStateManager.lineWidth(5f);
-		GlStateManager.disableTexture();
-		glDisable(GL_LIGHTING);
-		glTranslated(-x, -y, -z);
-		float[] rgb = color.getRGBColorComponents(null);
-		AxisAlignedBB box = new AxisAlignedBB(pos1, pos2.add(1, 1, 1)).grow(0.001d);
-		GlStateManager.enableDepthTest();
-		//DebugRenderer.func_217730_a(box, rgb[0], rgb[1], rgb[2], 0.2f);
-		GlStateManager.disableDepthTest();
-		//WorldRenderer.drawSelectionBoundingBox(box, rgb[0], rgb[1], rgb[2], 0.4f);
-		Vec3d playerPos = player.getEyePosition((float) partialTicks);
-		Vec3d nameRenderPos = box.getCenter();
+		matrix.push();
+		{
+			glEnable(GL_ALPHA_TEST);
+			GlStateManager.enableBlend();
+			GlStateManager.blendFuncSeparate(
+					GlStateManager.SourceFactor.SRC_ALPHA.param, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA.param,
+					GlStateManager.SourceFactor.ONE.param, GlStateManager.DestFactor.ZERO.param
+			);
+			GlStateManager.lineWidth(5f);
+			GlStateManager.disableTexture();
+			glDisable(GL_LIGHTING);
+			matrix.translate(-x, -y, -z);
+			float[] rgb = color.getRGBColorComponents(null);
+			AxisAlignedBB box = new AxisAlignedBB(pos1, pos2.add(1, 1, 1)).grow(0.001d);
+			GlStateManager.enableDepthTest();
+			DebugRenderer.renderBox(box, rgb[0], rgb[1], rgb[2], 0.2f);
+			GlStateManager.disableDepthTest();
+			//WorldRenderer.drawBoundingBox(matrix, , box, rgb[0], rgb[1], rgb[2], 0.4f);
+			Vec3d playerPos = player.getEyePosition((float) partialTicks);
+			Vec3d nameRenderPos = box.getCenter();
 
-		if (playerPos.y < box.minY + 0.5d) {
-			nameRenderPos = new Vec3d(nameRenderPos.x, box.minY + 0.5d, nameRenderPos.z);
-		} else if(playerPos.y > box.maxY - 0.5d) {
-			nameRenderPos = new Vec3d(nameRenderPos.x, box.maxY - 0.5d, nameRenderPos.z);
-		} else {
-			nameRenderPos = new Vec3d(nameRenderPos.x, playerPos.y, nameRenderPos.z);
+			if (playerPos.y < box.minY + 0.5d) {
+				nameRenderPos = new Vec3d(nameRenderPos.x, box.minY + 0.5d, nameRenderPos.z);
+			} else if (playerPos.y > box.maxY - 0.5d) {
+				nameRenderPos = new Vec3d(nameRenderPos.x, box.maxY - 0.5d, nameRenderPos.z);
+			} else {
+				nameRenderPos = new Vec3d(nameRenderPos.x, playerPos.y, nameRenderPos.z);
+			}
+
+			if (text != null && !text.isEmpty()) renderText(text, nameRenderPos);
+			GlStateManager.enableTexture();
+			glEnable(GL_LIGHTING);
+			GlStateManager.enableDepthTest();
 		}
-
-		if (text != null && !text.isEmpty()) renderText(text, nameRenderPos);
-		GlStateManager.enableTexture();
-		glEnable(GL_LIGHTING);
-		GlStateManager.enableDepthTest();
-		glPopMatrix();
+		matrix.pop();
 	}
 
 	//Copied a lot of this from EntityRenderer#drawNameplate and changed for my needs

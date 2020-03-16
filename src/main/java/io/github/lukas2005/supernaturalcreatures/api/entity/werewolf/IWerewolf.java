@@ -9,10 +9,14 @@ public interface IWerewolf extends IFactionEntity {
 
     Pack getPack();
     EnumPackRank getPackRank();
+    void setPackRank(EnumPackRank rank);
 
     default EnumForm getForm() {
         return EnumForm.HUMAN;
     }
+    void setForm(EnumForm form);
 
-    boolean isTransformed();
+    default boolean isTransformed() {
+        return getForm() != EnumForm.HUMAN;
+    };
 }

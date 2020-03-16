@@ -1,7 +1,5 @@
 package io.github.lukas2005.supernaturalcreatures;
 
-import de.teamlapen.vampirism.api.entity.factions.IPlayableFaction;
-import io.github.lukas2005.supernaturalcreatures.api.entity.werewolf.IWerewolfPlayer;
 import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.ai.attributes.RangedAttribute;
 

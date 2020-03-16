@@ -7,6 +7,7 @@ import io.github.lukas2005.supernaturalcreatures.world.Pack;
 import io.github.lukas2005.supernaturalcreatures.world.PackHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -70,11 +71,11 @@ public class RenderHandler {
 	public static void areaRendering(RenderWorldLastEvent e) {
 		PackHandler handler = PackHandler.forWorld(Minecraft.getInstance().world);
 
-		if (Minecraft.getInstance().player.isCrouching()) {
+		if (Screen.hasAltDown()) {
 			for (Map.Entry<ChunkPos, Pack> entry : handler.getPackChunks().entrySet()) {
 				if (!map.containsKey(entry.getValue().id)) map.put(entry.getValue().id, new Color(rand.nextInt(255),rand.nextInt(255),rand.nextInt(255)));
 				ChunkPos pos = entry.getKey();
-				RenderUtil.renderBox(new BlockPos(pos.getXStart(), 0, pos.getZStart()), new BlockPos(pos.getXEnd(), 255, pos.getZEnd()), mc.getRenderPartialTicks(), map.get(entry.getValue().id), entry.getValue().id.toString());
+				RenderUtil.renderBox(e.getMatrixStack(), new BlockPos(pos.getXStart(), 0, pos.getZStart()), new BlockPos(pos.getXEnd(), 255, pos.getZEnd()), mc.getRenderPartialTicks(), map.get(entry.getValue().id), entry.getValue().id.toString());
 			}
 		}
 	}

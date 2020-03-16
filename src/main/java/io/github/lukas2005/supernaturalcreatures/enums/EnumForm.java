@@ -6,4 +6,7 @@ public enum EnumForm {
     FERAL,
     HYBRID;
 
+    public static EnumForm by(int ordinal) {
+        return values()[ordinal];
+    }
 }

@@ -7,7 +7,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.SpawnEggItem;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.LightType;
 import net.minecraft.world.biome.Biome;
@@ -24,9 +23,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 //@ObjectHolder(Reference.MOD_ID)
@@ -36,8 +33,8 @@ public class ModEntities {
 
     public static final DeferredRegister<EntityType<?>> ENTITIES = new DeferredRegister<>(ForgeRegistries.ENTITIES, Reference.MOD_ID);
 
-    public static final RegistryObject<EntityType<EntityWerewolf>> WEREWOLF = register("werewolf",
-            EntityType.Builder.create(EntityWerewolf::new, EntityClassification.MONSTER)
+    public static final RegistryObject<EntityType<EntityOmegaWerewolf>> WEREWOLF = register("werewolf",
+            EntityType.Builder.create(EntityOmegaWerewolf::new, EntityClassification.MONSTER)
                     .size(0.6F, 1.95F)
                     .setTrackingRange(10)
                     .setUpdateInterval(3),
@@ -62,21 +59,21 @@ public class ModEntities {
             Biomes.GIANT_SPRUCE_TAIGA,
             Biomes.GIANT_SPRUCE_TAIGA_HILLS));
 
-    public static List<Integer> wolfBiomeIds;
+//    public static List<Integer> wolfBiomeIds;
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void registerEntities(RegistryEvent.Register<EntityType<?>> e) {
         addSpawn(WEREWOLF.get(), 6, 2, 5, EntityClassification.MONSTER, wolfBiomes);
 
-        EntitySpawnPlacementRegistry.register(WEREWOLF.get(), EntitySpawnPlacementRegistry.PlacementType.ON_GROUND, Heightmap.Type.WORLD_SURFACE, EntityWerewolf::spawnPlacement);
+        EntitySpawnPlacementRegistry.register(WEREWOLF.get(), EntitySpawnPlacementRegistry.PlacementType.ON_GROUND, Heightmap.Type.WORLD_SURFACE, EntityOmegaWerewolf::spawnPlacement);
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void onBiomeRegister(RegistryEvent.Register<Biome> e) {
-        wolfBiomeIds = wolfBiomes.stream()
-                .map(Registry.BIOME::getId)
-                .collect(Collectors.toList());
-    }
+//    @SubscribeEvent(priority = EventPriority.LOWEST)
+//    public static void onBiomeRegister(RegistryEvent.Register<Biome> e) {
+//        wolfBiomeIds = wolfBiomes.stream()
+//                .map(Registry.BIOME::getId)
+//                .collect(Collectors.toList());
+//    }
 
     public static <T extends Entity> RegistryObject<EntityType<T>> register(String key, EntityType.Builder<T> builder, int primaryColor, int secondaryColor) {
         EntityType<T> type = builder.build(key);

@@ -95,6 +95,10 @@ public class WerewolfPlayer extends VampirismPlayer<IWerewolfPlayer> implements 
     private int killedAnimal = 0;
     private boolean sleep = false;
 
+    private ResourceLocation skin = eyeOverlays.get(0);
+    private EnumPackRank packRank = EnumPackRank.OMEGA;
+    private EnumForm form = EnumForm.HUMAN;
+
     public WerewolfPlayer(PlayerEntity player) {
         super(player);
         this.applyEntityAttributes();
@@ -166,7 +170,12 @@ public class WerewolfPlayer extends VampirismPlayer<IWerewolfPlayer> implements 
 
     @Override
     public EnumForm getForm() {
-        return EnumForm.HYBRID;
+        return form;
+    }
+
+    @Override
+    public void setForm(EnumForm form) {
+        this.form = form;
     }
 
     @Override
@@ -186,12 +195,22 @@ public class WerewolfPlayer extends VampirismPlayer<IWerewolfPlayer> implements 
 
     @Override
     public EnumPackRank getPackRank() {
-        return EnumPackRank.OMEGA;
+        return packRank;
+    }
+
+    @Override
+    public void setPackRank(EnumPackRank rank) {
+        packRank = rank;
     }
 
     @Override
     public ResourceLocation getSkin() {
-        return skinOverlays.get(0);
+        return skin;
+    }
+
+    @Override
+    public void setSkin(ResourceLocation location) {
+        skin = location;
     }
 
     @Override
@@ -255,6 +274,9 @@ public class WerewolfPlayer extends VampirismPlayer<IWerewolfPlayer> implements 
         this.actionHandler.readUpdateFromServer(nbt);
         this.skillHandler.readUpdateFromServer(nbt);
         this.killedAnimal = nbt.getInt("bittenAnimal");
+        this.packRank = EnumPackRank.by(nbt.getInt("packRank"));
+        this.skin = skinOverlays.get(nbt.getInt("skin"));
+        this.form = EnumForm.by(nbt.getInt("form"));
     }
 
     @Override
@@ -262,18 +284,27 @@ public class WerewolfPlayer extends VampirismPlayer<IWerewolfPlayer> implements 
         this.actionHandler.writeUpdateForClient(nbt);
         this.skillHandler.writeUpdateForClient(nbt);
         nbt.putInt("bittenAnimal", this.killedAnimal);
+        nbt.putInt("packRank", packRank.ordinal());
+        nbt.putInt("skin", skinOverlays.indexOf(skin));
+        nbt.putInt("form", form.ordinal());
     }
 
     private void loadData(CompoundNBT nbt) {
         this.actionHandler.loadFromNbt(nbt);
         this.skillHandler.loadFromNbt(nbt);
         this.killedAnimal = nbt.getInt("bittenEntity");
+        this.packRank = EnumPackRank.by(nbt.getInt("packRank"));
+        this.skin = skinOverlays.get(nbt.getInt("skin"));
+        this.form = EnumForm.by(nbt.getInt("form"));
     }
 
     private void saveData(CompoundNBT nbt) {
         this.actionHandler.saveToNbt(nbt);
         this.skillHandler.saveToNbt(nbt);
         nbt.putInt("bittenEntity", this.killedAnimal);
+        nbt.putInt("packRank", packRank.ordinal());
+        nbt.putInt("skin", skinOverlays.indexOf(skin));
+        nbt.putInt("form", form.ordinal());
     }
 
 

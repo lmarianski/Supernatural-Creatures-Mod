@@ -11,10 +11,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public interface IPackHandler {
@@ -79,11 +76,11 @@ public interface IPackHandler {
         public void readNBT(Capability<IPackHandler> capability, IPackHandler instance, Direction side, INBT nbtBase) {
             CompoundNBT nbt = (CompoundNBT) nbtBase;
 
-            for (INBT packNBT : nbt.getList("allPacks", Constants.NBT.TAG_COMPOUND)) {
+            for (INBT packNBT : (ListNBT) Objects.requireNonNull(nbt.get("allPacks"))) {
                 instance.getAllPacks().add(Pack.fromNBT(packNBT, instance.getWorld()));
             }
 
-            for (INBT inbt : nbt.getList("packChunks", Constants.NBT.TAG_COMPOUND)) {
+            for (INBT inbt : (ListNBT) Objects.requireNonNull(nbt.get("packChunks"))) {
                 CompoundNBT chunkNBT = (CompoundNBT) inbt;
 
                 ChunkPos pos = new ChunkPos(chunkNBT.getInt("chunkX"), chunkNBT.getInt("chunkZ"));
@@ -91,7 +88,7 @@ public interface IPackHandler {
 
                 AtomicReference<Pack> pack = new AtomicReference<>();
 
-                instance.getAllPacks().forEach((p) -> {
+                instance.getAllPacks().forEach(p -> {
                     if (p.id.equals(id)) {
                         pack.set(p);
                     }
@@ -102,7 +99,7 @@ public interface IPackHandler {
                 }
             }
 
-            for (INBT inbt : nbt.getList("closedChunks", Constants.NBT.TAG_COMPOUND)) {
+            for (INBT inbt : (ListNBT)Objects.requireNonNull(nbt.get("closedChunks"))) {
                 CompoundNBT chunkNBT = (CompoundNBT) inbt;
 
                 ChunkPos pos = new ChunkPos(chunkNBT.getInt("chunkX"), chunkNBT.getInt("chunkZ"));

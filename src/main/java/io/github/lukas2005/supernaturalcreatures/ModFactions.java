@@ -32,7 +32,7 @@ public class ModFactions {
         WerewolfPlayer.registerCapability();
 
         WEREWOLF_FACTION = register("werewolf",
-                Color.LIGHT_GRAY,
+                new Color(192, 192, 192),
                 30,
                 IWerewolfPlayer.class,
                 WerewolfPlayer.class,

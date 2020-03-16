@@ -15,18 +15,20 @@ public class ModEffects {
 
 	public static final DeferredRegister<Effect> EFFECTS = new DeferredRegister<>(ForgeRegistries.POTIONS, Reference.MOD_ID);
 
-	public static final RegistryObject<EffectBase> FOOD_INDIGESTION = register(
+	public static final RegistryObject<EffectBase> SILVER_POISONING = EFFECTS.register(
+			"silver_poisoning",
+			() -> new EffectSilverPoisoning(EffectType.HARMFUL, new Color(192, 192, 192).getRGB())
+	);
+
+
+	public static final RegistryObject<EffectBase> FOOD_INDIGESTION = EFFECTS.register(
 			"food_indigestion",
-			new EffectBase(EffectType.HARMFUL, new Color(125, 0, 5).getRGB())
+			() -> new EffectBase(EffectType.HARMFUL, new Color(125, 0, 5).getRGB())
 	);
 
-	public static final RegistryObject<EffectBase> WAKEFULNESS = register(
+	public static final RegistryObject<EffectBase> WAKEFULNESS = EFFECTS.register(
 			"wakefulness",
-			new EffectBase(EffectType.HARMFUL, new Color(21, 16, 125).getRGB())
+			() -> new EffectBase(EffectType.HARMFUL, new Color(21, 16, 125).getRGB())
 	);
-
-	public static <T extends Effect> RegistryObject<T> register(String name, T effect) {
-		return EFFECTS.register(name, () -> effect);
-	}
 
 }

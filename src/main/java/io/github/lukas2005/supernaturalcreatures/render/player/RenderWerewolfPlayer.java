@@ -56,7 +56,13 @@ public class RenderWerewolfPlayer extends LivingRenderer<AbstractClientPlayerEnt
         this.addLayer(new LayerSkinOverlay<>(this));
     }
 
-//    @Override
+    @Override
+    public void render(AbstractClientPlayerEntity entityIn, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn) {
+        this.setModelVisibilities(entityIn);
+        super.render(entityIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
+    }
+
+    //    @Override
 //    public void doRender(AbstractClientPlayerEntity entity, double x, double y, double z, float entityYaw, float partialTicks) {
 //        if (!entity.isUser() || this.renderManager.info.getRenderViewEntity() == entity) {
 //            double d0 = y;
@@ -71,36 +77,15 @@ public class RenderWerewolfPlayer extends LivingRenderer<AbstractClientPlayerEnt
 //        }
 //    }
 
-
-
-    private static Method getArmPose;
-
-    static {
-        try {
-            getArmPose = PlayerRenderer.class.getDeclaredMethod("getArmPose", AbstractClientPlayerEntity.class, ItemStack.class, ItemStack.class, Hand.class);
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        }
-    }
-
-    EntityRenderer<? super AbstractClientPlayerEntity> render;
-    Entity lastPlayer;
+    PlayerRenderer render;
 
     private BipedModel.ArmPose getArmPose(AbstractClientPlayerEntity playerIn, ItemStack itemStackMain, ItemStack itemStackOff, Hand handIn) {
-        if (lastPlayer != playerIn)
-            render = renderManager.getRenderer(playerIn);
-            lastPlayer = playerIn;
-        try {
-            return (BipedModel.ArmPose) getArmPose.invoke(render, playerIn, itemStackMain, itemStackOff, handIn);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
-        }
-        return null;
+        if (render == null) render = (PlayerRenderer) renderManager.getRenderer(playerIn);
+        return render.getArmPose(playerIn, itemStackMain, itemStackOff, handIn);
     }
 
     private void setModelVisibilities(AbstractClientPlayerEntity clientPlayer) {
-        ModelWerewolf playermodel = this.getEntityModel();
-        EntityRenderer<? super AbstractClientPlayerEntity> renderer = renderManager.getRenderer(clientPlayer);
+        ModelWerewolf<AbstractClientPlayerEntity> playermodel = this.getEntityModel();
         if (clientPlayer.isSpectator()) {
             playermodel.setVisible(false);
             playermodel.bipedHead.showModel = true;
@@ -116,52 +101,18 @@ public class RenderWerewolfPlayer extends LivingRenderer<AbstractClientPlayerEnt
             playermodel.bipedLeftArmwear.showModel = clientPlayer.isWearing(PlayerModelPart.LEFT_SLEEVE);
             playermodel.bipedRightArmwear.showModel = clientPlayer.isWearing(PlayerModelPart.RIGHT_SLEEVE);
             playermodel.isSneak = clientPlayer.isCrouching();
-            BipedModel.ArmPose bipedmodel$armpose = this.getArmPose(clientPlayer, itemstack, itemstack1, Hand.MAIN_HAND);
-            BipedModel.ArmPose bipedmodel$armpose1 = this.getArmPose(clientPlayer, itemstack, itemstack1, Hand.OFF_HAND);
+            BipedModel.ArmPose poseMain = this.getArmPose(clientPlayer, itemstack, itemstack1, Hand.MAIN_HAND);
+            BipedModel.ArmPose poseOff = this.getArmPose(clientPlayer, itemstack, itemstack1, Hand.OFF_HAND);
             if (clientPlayer.getPrimaryHand() == HandSide.RIGHT) {
-                playermodel.rightArmPose = bipedmodel$armpose;
-                playermodel.leftArmPose = bipedmodel$armpose1;
+                playermodel.rightArmPose = poseMain;
+                playermodel.leftArmPose = poseOff;
             } else {
-                playermodel.rightArmPose = bipedmodel$armpose1;
-                playermodel.leftArmPose = bipedmodel$armpose;
+                playermodel.rightArmPose = poseOff;
+                playermodel.leftArmPose = poseMain;
             }
         }
 
     }
-
-//    private BipedModel.ArmPose func_217766_a(AbstractClientPlayerEntity p_217766_1_, ItemStack p_217766_2_, ItemStack p_217766_3_, Hand p_217766_4_) {
-//        BipedModel.ArmPose bipedmodel$armpose = BipedModel.ArmPose.EMPTY;
-//        ItemStack itemstack = p_217766_4_ == Hand.MAIN_HAND ? p_217766_2_ : p_217766_3_;
-//        if (!itemstack.isEmpty()) {
-//            bipedmodel$armpose = BipedModel.ArmPose.ITEM;
-//            if (p_217766_1_.getItemInUseCount() > 0) {
-//                UseAction useaction = itemstack.getUseAction();
-//                if (useaction == UseAction.BLOCK) {
-//                    bipedmodel$armpose = BipedModel.ArmPose.BLOCK;
-//                } else if (useaction == UseAction.BOW) {
-//                    bipedmodel$armpose = BipedModel.ArmPose.BOW_AND_ARROW;
-//                } else if (useaction == UseAction.SPEAR) {
-//                    bipedmodel$armpose = BipedModel.ArmPose.THROW_SPEAR;
-//                } else if (useaction == UseAction.CROSSBOW && p_217766_4_ == p_217766_1_.getActiveHand()) {
-//                    bipedmodel$armpose = BipedModel.ArmPose.CROSSBOW_CHARGE;
-//                }
-//            } else {
-//                boolean flag3 = p_217766_2_.getItem() == Items.CROSSBOW;
-//                boolean flag = CrossbowItem.isCharged(p_217766_2_);
-//                boolean flag1 = p_217766_3_.getItem() == Items.CROSSBOW;
-//                boolean flag2 = CrossbowItem.isCharged(p_217766_3_);
-//                if (flag3 && flag) {
-//                    bipedmodel$armpose = BipedModel.ArmPose.CROSSBOW_HOLD;
-//                }
-//
-//                if (flag1 && flag2 && p_217766_2_.getItem().getUseAction(p_217766_2_) == UseAction.NONE) {
-//                    bipedmodel$armpose = BipedModel.ArmPose.CROSSBOW_HOLD;
-//                }
-//            }
-//        }
-//
-//        return bipedmodel$armpose;
-//    }
 
     @Override
     public ResourceLocation getEntityTexture(AbstractClientPlayerEntity entity) {

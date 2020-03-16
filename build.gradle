@@ -28,7 +28,7 @@ minecraft {
     mappings channel: 'snapshot', version: '20200225-1.15.1'
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
     
-    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     // Default run configurations.
     // These can be tweaked, removed, or duplicated as needed.
@@ -86,11 +86,27 @@ minecraft {
     }
 }
 
+sourceSets {
+//    generated {
+//        resources {
+//            srcDirs = ["src/generated/resources"]
+//        }
+//    }
+    main {
+        resources {
+//            srcDirs += sourceSets.generated.output
+            srcDirs += 'src/generated/resources'
+            exclude '.cache'
+        }
+    }
+}
+
 repositories {
     //Maven repo for Vampirism
     maven {
         url = "https://maxanier.de/maven2"
     }
+    maven { url = 'https://files.minecraftforge.net/maven' }
 }
 
 def mc_version = "1.15.2"

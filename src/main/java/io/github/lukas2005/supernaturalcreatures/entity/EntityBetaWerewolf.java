@@ -1,9 +1,16 @@
 package io.github.lukas2005.supernaturalcreatures.entity;
 
+import de.teamlapen.vampirism.api.entity.actions.IActionHandlerEntity;
+import de.teamlapen.vampirism.api.entity.actions.IEntityActionUser;
 import de.teamlapen.vampirism.api.entity.factions.IFaction;
+import de.teamlapen.vampirism.api.world.IVillageAttributes;
 import de.teamlapen.vampirism.entity.vampire.BasicVampireEntity;
 import io.github.lukas2005.supernaturalcreatures.ModFactions;
+import io.github.lukas2005.supernaturalcreatures.api.entity.werewolf.IAlphaWerewolf;
+import io.github.lukas2005.supernaturalcreatures.api.entity.werewolf.IBetaWerewolf;
+import io.github.lukas2005.supernaturalcreatures.api.entity.werewolf.IOmegaWerewolf;
 import io.github.lukas2005.supernaturalcreatures.api.entity.werewolf.IWerewolfMob;
+import io.github.lukas2005.supernaturalcreatures.enums.EnumForm;
 import io.github.lukas2005.supernaturalcreatures.enums.EnumPackRank;
 import io.github.lukas2005.supernaturalcreatures.world.Pack;
 import net.minecraft.entity.*;
@@ -16,19 +23,22 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
+import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Random;
 
-public class EntityWerewolf extends MonsterEntity implements IWerewolfMob {
+public class EntityBetaWerewolf extends MonsterEntity implements IBetaWerewolf, IEntityActionUser {
 
-    public static final DataParameter<Boolean> IS_TRANSFORMED = EntityDataManager.createKey(EntityWerewolf.class, DataSerializers.BOOLEAN);
-    public static final DataParameter<Integer> PACK_RANK = EntityDataManager.createKey(EntityWerewolf.class, DataSerializers.VARINT);
+    public static final DataParameter<Boolean> IS_TRANSFORMED = EntityDataManager.createKey(EntityBetaWerewolf.class, DataSerializers.BOOLEAN);
+    public static final DataParameter<Integer> PACK_RANK = EntityDataManager.createKey(EntityBetaWerewolf.class, DataSerializers.VARINT);
 
-    protected EntityWerewolf(EntityType<? extends MonsterEntity> type, World worldIn) {
+    protected EntityBetaWerewolf(EntityType<? extends MonsterEntity> type, World worldIn) {
         super(type, worldIn);
     }
 
@@ -81,9 +91,9 @@ public class EntityWerewolf extends MonsterEntity implements IWerewolfMob {
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0D, false));
         this.goalSelector.addGoal(6, new MoveThroughVillageGoal(this, 1.0D, true, 4, ()->true));
         this.goalSelector.addGoal(7, new WaterAvoidingRandomWalkingGoal(this, 1.0D));
-        this.targetSelector.addGoal(1, (new HurtByTargetGoal(this)).setCallsForHelp(EntityWerewolf.class));
+        this.targetSelector.addGoal(1, (new HurtByTargetGoal(this)).setCallsForHelp(EntityBetaWerewolf.class));
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, PlayerEntity.class, true));
-        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, EntityWerewolf.class, false));
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, EntityBetaWerewolf.class, 10, false, false, (e) -> ((EntityBetaWerewolf)e).getPack() != getPack()));
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, BasicVampireEntity.class, false));
         this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, AbstractVillagerEntity.class, false));
         this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, IronGolemEntity.class, true));
@@ -105,12 +115,102 @@ public class EntityWerewolf extends MonsterEntity implements IWerewolfMob {
     }
 
     @Override
-    public EnumPackRank getPackRank() {
-        return EnumPackRank.OMEGA;
+    public void setForm(EnumForm form) {}
+
+    @Override
+    public IActionHandlerEntity getActionHandler() {
+        return null;
     }
 
     @Override
-    public boolean isTransformed() {
-        return true;
+    public int getLevel() {
+        return 0;
+    }
+
+    @Override
+    public void setLevel(int i) {
+
+    }
+
+    @Override
+    public int getMaxLevel() {
+        return 0;
+    }
+
+    @Override
+    public int suggestLevel(de.teamlapen.vampirism.api.difficulty.Difficulty difficulty) {
+        return 0;
+    }
+
+    @Override
+    public void attackVillage(IVillageAttributes iVillageAttributes) {
+
+    }
+
+    @Override
+    public void defendVillage(IVillageAttributes iVillageAttributes) {
+
+    }
+
+    @Nullable
+    @Override
+    public AxisAlignedBB getTargetVillageArea() {
+        return null;
+    }
+
+    @Override
+    public boolean isAttackingVillage() {
+        return false;
+    }
+
+    @Override
+    public boolean isDefendingVillage() {
+        return false;
+    }
+
+    @Override
+    public void stopVillageAttackDefense() {
+
+    }
+
+    @Nullable
+    @Override
+    public IVillageAttributes getVillageAttributes() {
+        return null;
+    }
+
+    @Override
+    public boolean addFollower(IOmegaWerewolf follower) {
+        return false;
+    }
+
+    @Override
+    public void removeFollower(IOmegaWerewolf follower) {
+
+    }
+
+    @Override
+    public int getFollowingCount() {
+        return 0;
+    }
+
+    @Override
+    public int getMaxFollowerCount() {
+        return 0;
+    }
+
+    @Override
+    public List<IOmegaWerewolf> getFollowers() {
+        return null;
+    }
+
+    @Override
+    public IAlphaWerewolf getLeader() {
+        return null;
+    }
+
+    @Override
+    public void setLeader(IAlphaWerewolf leader) {
+
     }
 }

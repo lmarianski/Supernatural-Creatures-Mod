@@ -5,6 +5,7 @@ import de.teamlapen.vampirism.api.entity.factions.IPlayableFaction;
 import de.teamlapen.vampirism.api.entity.player.IFactionPlayer;
 import de.teamlapen.vampirism.api.entity.player.actions.IActionHandler;
 import de.teamlapen.vampirism.api.entity.player.skills.ISkillHandler;
+import io.github.lukas2005.supernaturalcreatures.enums.EnumForm;
 import io.github.lukas2005.supernaturalcreatures.enums.EnumPackRank;
 import io.github.lukas2005.supernaturalcreatures.world.Pack;
 import net.minecraft.entity.LivingEntity;
@@ -17,6 +18,8 @@ import java.util.function.Predicate;
 public interface IWerewolfPlayer extends IFactionPlayer<IWerewolfPlayer>, IWerewolf {
 
     ResourceLocation getSkin();
+
+    void setSkin(ResourceLocation location);
 
     class Impl implements IWerewolfPlayer {
 
@@ -97,6 +100,16 @@ public interface IWerewolfPlayer extends IFactionPlayer<IWerewolfPlayer>, IWerew
         }
 
         @Override
+        public void setPackRank(EnumPackRank rank) {
+
+        }
+
+        @Override
+        public void setForm(EnumForm form) {
+
+        }
+
+        @Override
         public boolean isTransformed() {
             return false;
         }
@@ -104,6 +117,11 @@ public interface IWerewolfPlayer extends IFactionPlayer<IWerewolfPlayer>, IWerew
         @Override
         public ResourceLocation getSkin() {
             return null;
+        }
+
+        @Override
+        public void setSkin(ResourceLocation location) {
+
         }
     }
 

@@ -58,5 +58,5 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mollis lacinia magn
     modId="vampirism"
     mandatory=true
     versionRange="[1.6.0,)"
-    ordering="BEFORE"
+    ordering="NONE"
     side="BOTH"
